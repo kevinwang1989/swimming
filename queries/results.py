@@ -139,6 +139,19 @@ def get_participant_history(participant_id):
     return df
 
 
+def get_group_total_count(competition_name, gender, group_name):
+    """Get total number of participants in a group for a competition."""
+    conn = get_db()
+    row = conn.execute("""
+        SELECT COUNT(*) FROM enrollment e
+        JOIN competition c ON c.id = e.competition_id
+        JOIN group_def g ON g.id = e.group_id
+        WHERE c.name = ? AND g.gender = ? AND g.group_name = ?
+    """, (competition_name, gender, group_name)).fetchone()
+    conn.close()
+    return row[0] if row else 0
+
+
 def get_all_districts():
     """Return all distinct districts."""
     conn = get_db()

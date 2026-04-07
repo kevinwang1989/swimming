@@ -4,6 +4,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from queries.results import get_participant_history, get_all_districts
+from queries.results import get_group_total_count
 from db.connection import get_db
 
 st.set_page_config(page_title="选手查询", layout="wide")
@@ -75,7 +76,16 @@ for comp_name, comp_group in history.groupby('competition', sort=False):
     score_info = f"总分 {first['total_score']}" if first['total_score'] else ""
 
     st.markdown(f"### {comp_name} — {group_label}")
-    st.markdown(f"**{rank_info}  |  {score_info}**")
+
+    # Calculate percentile
+    percentile_str = ""
+    if first['rank']:
+        total = get_group_total_count(comp_name, first['gender'], first['group_name'])
+        if total > 0:
+            percentile = (1 - (first['rank'] - 1) / total) * 100
+            percentile_str = f"  |  超越 {percentile:.0f}% 的选手"
+
+    st.markdown(f"**{rank_info}  |  {score_info}{percentile_str}**")
 
     if first['rating']:
         st.markdown(f"评级：**{first['rating']}**")
