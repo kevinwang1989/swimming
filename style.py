@@ -85,6 +85,11 @@ def apply_style():
         border-radius: 8px;
     }
 
+    /* ---- Hide sidebar collapse button text glitch ---- */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: none;
+    }
+
     /* ---- Hide Streamlit branding ---- */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
