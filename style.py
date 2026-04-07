@@ -20,19 +20,7 @@ def apply_style():
 
     /* ---- Sidebar styling ---- */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
-    }
-    section[data-testid="stSidebar"] * {
-        color: #e8eaf6 !important;
-    }
-    section[data-testid="stSidebar"] .stPageLink p,
-    section[data-testid="stSidebar"] a {
-        color: #c5cae9 !important;
-        transition: all 0.2s;
-    }
-    section[data-testid="stSidebar"] .stPageLink:hover p,
-    section[data-testid="stSidebar"] a:hover {
-        color: #ffffff !important;
+        background: #f0f2f8;
     }
 
     /* ---- Metric cards ---- */
