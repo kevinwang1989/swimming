@@ -231,10 +231,10 @@ document.addEventListener('DOMContentLoaded', function() {{
 <table class="tbl"><thead>
 <tr>'''
 
-# Frozen header: two explicit rows to match the right table's 2-row header
+# Frozen header: two rows visually merged into one
 frozen_labels = [col_rename.get(c, c) for c in frozen_keys]
 for label in frozen_labels:
-    html += f'<th>{label}</th>'
+    html += f'<th style="border-bottom:none; vertical-align:middle;">{label}</th>'
 html += '</tr>\n<tr>'
 for _ in frozen_labels:
     html += f'<th style="height:{ROW_H}px; padding:0; border-top:none;"></th>'
