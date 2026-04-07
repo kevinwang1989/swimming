@@ -20,6 +20,21 @@ if not comps.empty:
 st.markdown("---")
 st.markdown("### 导入新比赛")
 
+# Admin password protection
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "swim2026admin")
+
+password = st.text_input("请输入管理员密码", type="password", placeholder="输入密码解锁导入功能...")
+
+if not password:
+    st.info("导入功能需要管理员密码。")
+    st.stop()
+
+if password != ADMIN_PASSWORD:
+    st.error("密码错误。")
+    st.stop()
+
+st.success("验证通过，可以导入数据。")
+
 # Upload form
 uploaded_file = st.file_uploader("上传成绩册 PDF", type=['pdf'])
 
@@ -33,7 +48,6 @@ with col3:
 
 if uploaded_file and comp_name and short_name:
     if st.button("开始导入", type="primary"):
-        # Save uploaded file to temp location
         with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
             tmp.write(uploaded_file.read())
             tmp_path = tmp.name
