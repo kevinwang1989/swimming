@@ -134,151 +134,151 @@ def cell_style(val):
         return ' style="color: #999;"'
     return ''
 
-# Split into frozen (base) columns and scrollable (event) columns
+# Single table with CSS sticky frozen columns (no rowspan, no split tables)
 FREEZE_COLS = 4  # 排名, 姓名, 所属区, 总分
 
 event_col_set = {ec[0] for ec in event_cols}
 base_keys = [c for c in display_cols if c not in event_col_set]
-frozen_keys = base_keys[:FREEZE_COLS]
-rest_base_keys = base_keys[FREEZE_COLS:]  # 评级, 备注 etc.
-event_keys = [orig for orig, ename, sub in event_cols]
+rest_base_keys = base_keys[FREEZE_COLS:]
+ordered_keys = list(base_keys)
+for orig, ename, sub in event_cols:
+    ordered_keys.append(orig)
 
-# Scrollable column keys = remaining base columns + event columns
-scroll_keys = rest_base_keys + event_keys
+# All columns in order with display labels
+all_col_labels = [col_rename.get(c, c) for c in base_keys]
 
-# Row height must be consistent
-ROW_H = 35
+# Build CSS: frozen columns need fixed left positions
+# Measure each frozen column width based on content
+frozen_widths = []
+for i in range(FREEZE_COLS):
+    label = all_col_labels[i]
+    key = base_keys[i]
+    # Find max content width: check header + all data
+    max_len = len(label)
+    for _, row in display_df.iterrows():
+        val = str(row.get(key, ''))
+        if val != 'nan':
+            max_len = max(max_len, len(val))
+    # Approximate: each CJK char ~16px, each ASCII char ~9px, plus 20px padding
+    avg_char_w = 14
+    w = max_len * avg_char_w + 24
+    w = max(w, 50)  # minimum 50px
+    frozen_widths.append(w)
 
-html = f'''<style>
-.split-table-wrap {{
-    display: flex;
+# Calculate cumulative left offsets
+frozen_lefts = []
+cum = 0
+for w in frozen_widths:
+    frozen_lefts.append(cum)
+    cum += w
+
+# Header row height
+HDR_H = 37
+
+html = '<style>\n'
+html += '''.rt-wrap {
+    overflow: auto;
     max-height: 620px;
     border-radius: 8px;
     box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-    overflow: hidden;
-}}
-/* Left frozen table */
-.frozen-part {{
-    flex-shrink: 0;
-    overflow-y: auto;
-    border-right: 2px solid #ccc;
-    box-shadow: 2px 0 6px rgba(0,0,0,0.08);
-    z-index: 2;
-    scrollbar-width: none;
-}}
-.frozen-part::-webkit-scrollbar {{ display: none; }}
-/* Right scrollable table */
-.scroll-part {{
-    flex: 1;
-    overflow-x: auto;
-    overflow-y: auto;
-}}
-/* Sync scroll: hide scrollbar on frozen side, real scrollbar on scroll side */
-.tbl {{
-    border-collapse: collapse;
+}
+.rt {
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 0.85rem;
     white-space: nowrap;
-}}
-.tbl th, .tbl td {{
+}
+.rt th, .rt td {
     border: 1px solid #e0e0e0;
     padding: 6px 10px;
     text-align: center;
-    height: {ROW_H}px;
-    box-sizing: border-box;
-}}
-.tbl thead th {{
+}
+.rt thead th {
     background: #f5f5fa;
-    font-weight: 600;
     position: sticky;
     top: 0;
-    z-index: 2;
+    z-index: 3;
+    font-weight: 600;
+}
+'''
+html += f'.rt thead tr:nth-child(2) th {{ top: {HDR_H}px; z-index: 2; }}\n'
+html += f'.rt thead tr:nth-child(2) th.fz {{ z-index: 5; top: {HDR_H}px; }}\n'
+
+# Frozen column CSS per column index
+for i in range(FREEZE_COLS):
+    html += f'''.rt .fz{i} {{
+    position: sticky;
+    left: {frozen_lefts[i]}px;
+    min-width: {frozen_widths[i]}px;
+    max-width: {frozen_widths[i]}px;
+    z-index: 1;
+    background: #fff;
 }}
-.tbl thead tr:first-child th {{ top: 0; z-index: 3; }}
-.tbl thead tr:nth-child(2) th {{ top: {ROW_H}px; z-index: 2; }}
-.tbl tbody tr:hover {{ background: #f0f4ff; }}
-.tbl tbody td {{ font-variant-numeric: tabular-nums; }}
+.rt thead .fz{i} {{
+    z-index: 5;
+    background: #f5f5fa;
+}}
+'''
+
+# Shadow on last frozen column
+html += f'''.rt .fz{FREEZE_COLS - 1} {{
+    box-shadow: 2px 0 4px rgba(0,0,0,0.08);
+}}
+'''
+
+html += '''.rt tbody tr:hover td { background: #f0f4ff; }
+.rt tbody td { font-variant-numeric: tabular-nums; }
 </style>
+'''
 
-<script>
-// Synchronize vertical scroll between frozen and scroll parts
-document.addEventListener('DOMContentLoaded', function() {{
-    setTimeout(function() {{
-        var pairs = document.querySelectorAll('.split-table-wrap');
-        pairs.forEach(function(wrap) {{
-            var fp = wrap.querySelector('.frozen-part');
-            var sp = wrap.querySelector('.scroll-part');
-            if (!fp || !sp) return;
-            var syncing = false;
-            sp.addEventListener('scroll', function() {{
-                if (syncing) return;
-                syncing = true;
-                fp.scrollTop = sp.scrollTop;
-                syncing = false;
-            }});
-            fp.addEventListener('scroll', function() {{
-                if (syncing) return;
-                syncing = true;
-                sp.scrollTop = fp.scrollTop;
-                syncing = false;
-            }});
-        }});
-    }}, 500);
-}});
-</script>
+# Build table HTML
+html += '<div class="rt-wrap"><table class="rt"><thead>\n'
 
-<div class="split-table-wrap">
-<div class="frozen-part">
-<table class="tbl"><thead>
-<tr>'''
-
-# Frozen header: two rows visually merged into one
-frozen_labels = [col_rename.get(c, c) for c in frozen_keys]
-for label in frozen_labels:
-    html += f'<th style="border-bottom:none; vertical-align:middle;">{label}</th>'
-html += '</tr>\n<tr>'
-for _ in frozen_labels:
-    html += f'<th style="height:{ROW_H}px; padding:0; border-top:none;"></th>'
-html += '</tr></thead>\n<tbody>'
-
-# Frozen body rows
-for _, row in display_df.iterrows():
-    html += '<tr>'
-    for key in frozen_keys:
-        val = str(row.get(key, ''))
-        if val == 'nan':
-            val = ''
-        s = cell_style(val)
-        html += f'<td{s}>{val}</td>'
-    html += '</tr>\n'
-html += '</tbody></table></div>\n'
-
-# Scrollable part
-html += '<div class="scroll-part"><table class="tbl"><thead>\n<tr>'
-
-# Rest base columns with rowspan=2
-rest_base_labels = [col_rename.get(c, c) for c in rest_base_keys]
-for label in rest_base_labels:
-    html += f'<th rowspan="2">{label}</th>'
+# ---- Header Row 1 ----
+html += '<tr>'
+# Frozen base columns: show label, hide bottom border (visually merge with row 2)
+for i in range(FREEZE_COLS):
+    html += f'<th class="fz fz{i}" style="border-bottom:none; vertical-align:middle;">{all_col_labels[i]}</th>'
+# Non-frozen base columns (评级, 备注): show label, hide bottom border
+for i in range(FREEZE_COLS, len(base_keys)):
+    html += f'<th style="border-bottom:none; vertical-align:middle;">{all_col_labels[i]}</th>'
 # Event group headers with colspan
 for ename, subs in event_groups.items():
     html += f'<th colspan="{len(subs)}">{ename}</th>'
-html += '</tr>\n<tr>'
-# Event sub-headers
+html += '</tr>\n'
+
+# ---- Header Row 2 ----
+html += '<tr>'
+# Frozen base columns: empty, no top border (visually merged)
+for i in range(FREEZE_COLS):
+    html += f'<th class="fz fz{i}" style="border-top:none; padding:2px;"></th>'
+# Non-frozen base columns: empty, no top border
+for i in range(FREEZE_COLS, len(base_keys)):
+    html += '<th style="border-top:none; padding:2px;"></th>'
+# Event sub-headers (成绩, 得分)
 for ename, subs in event_groups.items():
     for sub in subs:
         html += f'<th>{sub}</th>'
-html += '</tr></thead>\n<tbody>'
+html += '</tr>\n</thead>\n<tbody>\n'
 
-# Scrollable body rows
+# ---- Body Rows ----
 for _, row in display_df.iterrows():
     html += '<tr>'
-    for key in scroll_keys:
+    for col_idx, key in enumerate(ordered_keys):
         val = str(row.get(key, ''))
         if val == 'nan':
             val = ''
         s = cell_style(val)
-        html += f'<td{s}>{val}</td>'
+        if col_idx < FREEZE_COLS:
+            if s:
+                inner = s.replace(' style="', '').rstrip('"')
+                html += f'<td class="fz{col_idx}" style="{inner}">{val}</td>'
+            else:
+                html += f'<td class="fz{col_idx}">{val}</td>'
+        else:
+            html += f'<td{s}>{val}</td>'
     html += '</tr>\n'
-html += '</tbody></table></div>\n</div>'
+
+html += '</tbody></table></div>'
 
 st.markdown(html, unsafe_allow_html=True)
