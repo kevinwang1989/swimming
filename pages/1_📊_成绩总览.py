@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {{
 frozen_labels = [col_rename.get(c, c) for c in frozen_keys]
 for label in frozen_labels:
     html += f'<th rowspan="2">{label}</th>'
-html += '</tr>\n<tr></tr></thead>\n<tbody>'
+html += f'</tr>\n<tr style="height:{ROW_H}px;"></tr></thead>\n<tbody>'
 
 # Frozen body rows
 for _, row in display_df.iterrows():
