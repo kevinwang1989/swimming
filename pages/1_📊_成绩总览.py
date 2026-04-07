@@ -137,79 +137,100 @@ def cell_style(val):
 # Number of base columns to freeze (排名, 姓名, 所属区, 总分)
 FREEZE_COLS = 4
 
-html = '''<style>
-.results-table-wrap {
-    overflow-x: auto;
-    max-height: 600px;
-    overflow-y: auto;
-    border-radius: 8px;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-}
-.results-table {
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 0.85rem;
-    white-space: nowrap;
-}
-.results-table th, .results-table td {
-    border: 1px solid #e0e0e0;
-    padding: 6px 10px;
-    text-align: center;
-}
-.results-table thead th {
-    background: #f5f5fa;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    font-weight: 600;
-}
-.results-table thead tr:first-child th {
-    top: 0;
-    z-index: 3;
-}
-.results-table thead tr:nth-child(2) th {
-    top: 33px;
-    z-index: 2;
-}
-/* Frozen columns */
-.results-table .frozen {
-    position: sticky;
-    background: #fff;
-    z-index: 1;
-}
-.results-table thead .frozen {
-    background: #f5f5fa;
-    z-index: 4;
-}
-.results-table tbody tr:hover .frozen {
-    background: #f0f4ff;
-}
-.results-table tbody tr:hover {
-    background: #f0f4ff;
-}
-.results-table tbody td {
-    font-variant-numeric: tabular-nums;
-}
-</style>
-'''
-
-# Estimate column widths for left offsets (px)
-# 排名~50, 姓名~80, 所属区~80, 总分~55, 评级~50, 备注~50
-col_widths = {'排名': 50, '姓名': 80, '所属区': 80, '总分': 55, '性别': 50, '评级': 50, '备注': 50}
+# Fixed widths for frozen columns (px) - must match CSS min/max-width
+frozen_col_widths = {'排名': 50, '姓名': 80, '所属区': 80, '总分': 55, '性别': 50}
+# Calculate left offsets from fixed widths
 freeze_lefts = []
 cumulative = 0
 for i, label in enumerate(base_col_labels):
     if i < FREEZE_COLS:
         freeze_lefts.append(cumulative)
-        w = col_widths.get(label, 60)
-        cumulative += w + 20  # width + padding
+        cumulative += frozen_col_widths.get(label, 60)
+
+# Generate CSS for frozen column positions
+frozen_css = ""
+for i in range(min(FREEZE_COLS, len(base_col_labels))):
+    left = freeze_lefts[i]
+    w = frozen_col_widths.get(base_col_labels[i], 60)
+    frozen_css += f"""
+.results-table td.fz{i}, .results-table th.fz{i} {{
+    position: sticky;
+    left: {left}px;
+    min-width: {w}px;
+    max-width: {w}px;
+    width: {w}px;
+    box-sizing: border-box;
+}}"""
+
+# Add shadow on the last frozen column for visual separation
+last_fz = min(FREEZE_COLS, len(base_col_labels)) - 1
+frozen_css += f"""
+.results-table td.fz{last_fz}, .results-table th.fz{last_fz} {{
+    box-shadow: 2px 0 4px rgba(0,0,0,0.06);
+}}"""
+
+html = f'''<style>
+.results-table-wrap {{
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}}
+.results-table {{
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}}
+.results-table th, .results-table td {{
+    border: 1px solid #e0e0e0;
+    padding: 6px 10px;
+    text-align: center;
+}}
+.results-table thead th {{
+    background: #f5f5fa;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    font-weight: 600;
+}}
+.results-table thead tr:first-child th {{
+    top: 0;
+    z-index: 3;
+}}
+.results-table thead tr:nth-child(2) th {{
+    top: 33px;
+    z-index: 2;
+}}
+/* Frozen column base styles */
+.results-table td[class^="fz"] {{
+    background: #fff;
+    z-index: 1;
+}}
+.results-table thead th[class^="fz"] {{
+    background: #f5f5fa;
+    z-index: 5;
+}}
+.results-table tbody tr:hover td[class^="fz"] {{
+    background: #f0f4ff;
+}}
+.results-table tbody tr:hover {{
+    background: #f0f4ff;
+}}
+.results-table tbody td {{
+    font-variant-numeric: tabular-nums;
+}}
+{frozen_css}
+</style>
+'''
 
 html += '<div class="results-table-wrap"><table class="results-table"><thead>\n<tr>'
 
 # Header row 1: base columns with rowspan=2, event groups with colspan
 for i, label in enumerate(base_col_labels):
     if i < FREEZE_COLS:
-        html += f'<th rowspan="2" class="frozen" style="left:{freeze_lefts[i]}px;">{label}</th>'
+        html += f'<th rowspan="2" class="fz{i}">{label}</th>'
     else:
         html += f'<th rowspan="2">{label}</th>'
 for ename, subs in event_groups.items():
@@ -238,13 +259,11 @@ for _, row in display_df.iterrows():
             val = ''
         extra_style = cell_style(val)
         if col_idx < FREEZE_COLS:
-            left = freeze_lefts[col_idx]
             if extra_style:
-                # Merge frozen style with special style
                 inner = extra_style.replace(' style="', '').rstrip('"')
-                html += f'<td class="frozen" style="left:{left}px;{inner}">{val}</td>'
+                html += f'<td class="fz{col_idx}" style="{inner}">{val}</td>'
             else:
-                html += f'<td class="frozen" style="left:{left}px;">{val}</td>'
+                html += f'<td class="fz{col_idx}">{val}</td>'
         else:
             html += f'<td{extra_style}>{val}</td>'
     html += '</tr>\n'
