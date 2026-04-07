@@ -200,12 +200,11 @@ html += '''.rt-wrap {
     z-index: 3;
     font-weight: 600;
 }
-.rt thead tr:last-child th {
-    box-shadow: 0 1px 0 #e0e0e0;
-}
 '''
-html += f'.rt thead tr:nth-child(2) th {{ top: {HDR_H - 1}px; z-index: 2; }}\n'
-html += f'.rt thead tr:nth-child(2) th.fz {{ z-index: 5; top: {HDR_H - 1}px; }}\n'
+# Use actual measured row height: border(1) + padding(6+6) + font(~18) = ~31, use safe value
+HDR_ROW_H = 33
+html += f'.rt thead tr:nth-child(2) th {{ top: {HDR_ROW_H}px; z-index: 2; }}\n'
+html += f'.rt thead tr:nth-child(2) th.fz {{ z-index: 5; top: {HDR_ROW_H}px; }}\n'
 
 # Frozen column CSS per column index
 for i in range(FREEZE_COLS):
@@ -239,12 +238,10 @@ html += '<div class="rt-wrap"><table class="rt"><thead>\n'
 
 # ---- Header Row 1 ----
 html += '<tr>'
-# Frozen base columns: show label, hide bottom border (visually merge with row 2)
-for i in range(FREEZE_COLS):
-    html += f'<th class="fz fz{i}" style="border-bottom:none; vertical-align:middle;">{all_col_labels[i]}</th>'
-# Non-frozen base columns (评级, 备注): show label, hide bottom border
-for i in range(FREEZE_COLS, len(base_keys)):
-    html += f'<th style="border-bottom:none; vertical-align:middle;">{all_col_labels[i]}</th>'
+# Frozen + non-frozen base columns: show label in row 1
+for i in range(len(base_keys)):
+    cls = f' class="fz fz{i}"' if i < FREEZE_COLS else ''
+    html += f'<th{cls}>{all_col_labels[i]}</th>'
 # Event group headers with colspan
 for ename, subs in event_groups.items():
     html += f'<th colspan="{len(subs)}">{ename}</th>'
@@ -252,12 +249,10 @@ html += '</tr>\n'
 
 # ---- Header Row 2 ----
 html += '<tr>'
-# Frozen base columns: empty, no top border (visually merged)
-for i in range(FREEZE_COLS):
-    html += f'<th class="fz fz{i}" style="border-top:none; padding:2px;"></th>'
-# Non-frozen base columns: empty, no top border
-for i in range(FREEZE_COLS, len(base_keys)):
-    html += '<th style="border-top:none; padding:2px;"></th>'
+# Frozen + non-frozen base columns: empty cell (keeps borders, no gap)
+for i in range(len(base_keys)):
+    cls = f' class="fz fz{i}"' if i < FREEZE_COLS else ''
+    html += f'<th{cls}>&nbsp;</th>'
 # Event sub-headers (成绩, 得分)
 for ename, subs in event_groups.items():
     for sub in subs:
