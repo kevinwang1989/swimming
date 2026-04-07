@@ -2,28 +2,62 @@ import streamlit as st
 import sys, os, tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+st.set_page_config(page_title="反馈与帮助", layout="wide")
+
+from style import apply_style
+apply_style()
+
+st.title("💬 反馈与帮助")
+
+# ---- Feedback section ----
+st.markdown("### 意见反馈")
+st.markdown("如果你在使用中遇到问题或有功能建议，欢迎通过小红书联系我：")
+
+col1, col2 = st.columns([1, 2])
+with col1:
+    st.markdown("""
+    <div style="
+        background: linear-gradient(135deg, #ff2442 0%, #ff6b81 100%);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        color: white;
+    ">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📕</div>
+        <div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.3rem;">KK下泳池</div>
+        <div style="font-size: 0.9rem; opacity: 0.9;">小红书号：542518058</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+    **关注方式：**
+    1. 打开小红书 App
+    2. 搜索 **KK下泳池** 或小红书号 **542518058**
+    3. 关注后私信即可反馈
+
+    **可以反馈的内容：**
+    - 🐛 数据错误或显示问题
+    - 💡 功能建议和需求
+    - ❓ 使用过程中的疑问
+    """)
+
+st.markdown("---")
+
+# ---- Data import section (password protected) ----
+st.markdown("### 数据导入（管理员）")
+
 from db.init_db import init_database
 from importer.import_service import import_pdf
 from queries.results import get_competitions
 
-st.set_page_config(page_title="导入数据", layout="wide")
-
-from style import apply_style
-apply_style()
-st.title("📥 导入比赛数据")
-
-# Show existing competitions
 comps = get_competitions()
 if not comps.empty:
-    st.markdown("### 已导入的比赛")
+    st.markdown("**已导入的比赛：**")
     st.dataframe(comps[['name', 'short_name', 'date']].rename(columns={
         'name': '比赛名称', 'short_name': '简称', 'date': '日期'
     }), use_container_width=True, hide_index=True)
 
-st.markdown("---")
-st.markdown("### 导入新比赛")
-
-# Admin password protection
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "swim2026admin")
 
 password = st.text_input("请输入管理员密码", type="password", placeholder="输入密码解锁导入功能...")
@@ -38,7 +72,6 @@ if password != ADMIN_PASSWORD:
 
 st.success("验证通过，可以导入数据。")
 
-# Upload form
 uploaded_file = st.file_uploader("上传成绩册 PDF", type=['pdf'])
 
 col1, col2, col3 = st.columns(3)
