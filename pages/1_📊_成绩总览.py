@@ -113,29 +113,101 @@ for c in score_format_cols:
         )
 display_df = display_df.fillna('')
 
-# Build MultiIndex columns for compact two-level headers
-event_col_set = {ec[0] for ec in event_cols}
-multi_cols = []
-for c in display_df.columns:
-    if c in event_col_set:
-        # Find the event name and sub-label
-        for orig, ename, sub in event_cols:
-            if orig == c:
-                multi_cols.append((ename, sub))
-                break
-    else:
-        label = col_rename.get(c, c)
-        multi_cols.append((label, ''))
+# Don't rename columns - we'll use original keys for data access
 
-display_df.columns = pd.MultiIndex.from_tuples(multi_cols)
+# Build HTML table with proper two-level headers
+# Separate base columns and event columns
+base_col_labels = [col_rename.get(c, c) for c in display_cols if c not in {ec[0] for ec in event_cols}]
+# Group events: list of (event_name, [(col_label, sub_label)])
+from collections import OrderedDict
+event_groups = OrderedDict()
+for orig, ename, sub in event_cols:
+    if ename not in event_groups:
+        event_groups[ename] = []
+    event_groups[ename].append(sub)
 
-# Apply styling
-def highlight_special(val):
+def cell_style(val):
+    """Return inline style for special values."""
     if val == '犯规':
-        return 'color: red; font-weight: bold'
+        return ' style="color: red; font-weight: bold;"'
     elif val == '弃权':
-        return 'color: gray'
+        return ' style="color: #999;"'
     return ''
 
-styled = display_df.style.map(highlight_special)
-st.dataframe(styled, use_container_width=True, height=600)
+html = '''<style>
+.results-table-wrap {
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+.results-table {
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    width: 100%;
+}
+.results-table th, .results-table td {
+    border: 1px solid #e0e0e0;
+    padding: 6px 10px;
+    text-align: center;
+}
+.results-table thead th {
+    background: #f5f5fa;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    font-weight: 600;
+}
+.results-table thead tr:first-child th {
+    top: 0;
+    z-index: 3;
+}
+.results-table thead tr:nth-child(2) th {
+    top: 33px;
+    z-index: 2;
+}
+.results-table tbody tr:hover {
+    background: #f0f4ff;
+}
+.results-table tbody td {
+    font-variant-numeric: tabular-nums;
+}
+</style>
+<div class="results-table-wrap"><table class="results-table"><thead>
+<tr>'''
+
+# Header row 1: base columns with rowspan=2, event groups with colspan
+for label in base_col_labels:
+    html += f'<th rowspan="2">{label}</th>'
+for ename, subs in event_groups.items():
+    html += f'<th colspan="{len(subs)}">{ename}</th>'
+html += '</tr>\n<tr>'
+
+# Header row 2: only event sub-labels (成绩, 得分)
+for ename, subs in event_groups.items():
+    for sub in subs:
+        html += f'<th>{sub}</th>'
+html += '</tr></thead>\n<tbody>'
+
+# Build ordered column keys matching the header layout (use original df column names)
+event_col_set = {ec[0] for ec in event_cols}
+ordered_keys = [c for c in display_cols if c not in event_col_set]
+for orig, ename, sub in event_cols:
+    ordered_keys.append(orig)
+
+# Render rows
+for _, row in display_df.iterrows():
+    html += '<tr>'
+    for key in ordered_keys:
+        val = str(row.get(key, ''))
+        if val == 'nan':
+            val = ''
+        style = cell_style(val)
+        html += f'<td{style}>{val}</td>'
+    html += '</tr>\n'
+
+html += '</tbody></table></div>'
+
+st.markdown(html, unsafe_allow_html=True)
