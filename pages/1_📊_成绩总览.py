@@ -88,29 +88,46 @@ if 'remark' in df.columns:
     col_rename['remark'] = '备注'
 
 # Add event columns
+event_cols = []  # list of (original_col, event_name, sub_label)
 for _, evt in events.iterrows():
     ename = evt['name']
     score_col = f'{ename}_成绩'
     point_col = f'{ename}_得分'
     if score_col in df.columns:
         display_cols.append(score_col)
-        col_rename[score_col] = f'{ename}\n成绩'
+        event_cols.append((score_col, ename, '成绩'))
     if point_col in df.columns:
         display_cols.append(point_col)
-        col_rename[point_col] = f'{ename}\n得分'
+        event_cols.append((point_col, ename, '得分'))
 
 # Filter to existing columns only
 display_cols = [c for c in display_cols if c in df.columns]
-display_df = df[display_cols].rename(columns=col_rename)
+display_df = df[display_cols].copy()
 
 # Format: scores to 1 decimal, None to empty
-score_cols = ['总分'] + [c for c in display_df.columns if c.endswith('得分')]
-for c in score_cols:
+score_format_cols = ['total_score'] + [c for c in display_df.columns if c.endswith('_得分')]
+for c in score_format_cols:
     if c in display_df.columns:
         display_df[c] = display_df[c].apply(
             lambda x: f'{x:.1f}' if pd.notna(x) else ''
         )
 display_df = display_df.fillna('')
+
+# Build MultiIndex columns for compact two-level headers
+event_col_set = {ec[0] for ec in event_cols}
+multi_cols = []
+for c in display_df.columns:
+    if c in event_col_set:
+        # Find the event name and sub-label
+        for orig, ename, sub in event_cols:
+            if orig == c:
+                multi_cols.append((ename, sub))
+                break
+    else:
+        label = col_rename.get(c, c)
+        multi_cols.append((label, ''))
+
+display_df.columns = pd.MultiIndex.from_tuples(multi_cols)
 
 # Apply styling
 def highlight_special(val):
