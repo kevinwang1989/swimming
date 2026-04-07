@@ -128,9 +128,7 @@ for orig, ename, sub in event_cols:
 
 def cell_style(val):
     """Return inline style for special values."""
-    if val == '犯规':
-        return ' style="color: red; font-weight: bold;"'
-    elif val == '弃权':
+    if val == '弃权':
         return ' style="color: #999;"'
     return ''
 
