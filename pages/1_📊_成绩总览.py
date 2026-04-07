@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -64,6 +65,15 @@ for _, evt in events.iterrows():
 # Filter to existing columns only
 display_cols = [c for c in display_cols if c in df.columns]
 display_df = df[display_cols].rename(columns=col_rename)
+
+# Format: scores to 1 decimal, None to empty
+score_cols = ['总分'] + [c for c in display_df.columns if c.endswith('得分')]
+for c in score_cols:
+    if c in display_df.columns:
+        display_df[c] = display_df[c].apply(
+            lambda x: f'{x:.1f}' if pd.notna(x) else ''
+        )
+display_df = display_df.fillna('')
 
 # Apply styling
 def highlight_special(val):
