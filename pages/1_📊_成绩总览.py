@@ -231,11 +231,14 @@ document.addEventListener('DOMContentLoaded', function() {{
 <table class="tbl"><thead>
 <tr>'''
 
-# Frozen header: base columns with rowspan=2
+# Frozen header: two explicit rows to match the right table's 2-row header
 frozen_labels = [col_rename.get(c, c) for c in frozen_keys]
 for label in frozen_labels:
-    html += f'<th rowspan="2">{label}</th>'
-html += f'</tr>\n<tr style="height:{ROW_H}px;"></tr></thead>\n<tbody>'
+    html += f'<th>{label}</th>'
+html += '</tr>\n<tr>'
+for _ in frozen_labels:
+    html += f'<th style="height:{ROW_H}px; padding:0; border-top:none;"></th>'
+html += '</tr></thead>\n<tbody>'
 
 # Frozen body rows
 for _, row in display_df.iterrows():
