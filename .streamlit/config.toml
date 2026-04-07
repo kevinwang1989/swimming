@@ -2,10 +2,11 @@
 headless = true
 
 [theme]
-primaryColor = "#1E88E5"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
+primaryColor = "#3949ab"
+backgroundColor = "#fafbff"
+secondaryBackgroundColor = "#e8eaf6"
+textColor = "#1a1a2e"
+font = "sans serif"
 
 [browser]
 gatherUsageStats = false

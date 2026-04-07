@@ -8,6 +8,9 @@ from queries.results import get_competitions, get_events_for_group
 from queries.district import district_summary, district_event_comparison
 
 st.set_page_config(page_title="区县排名", layout="wide")
+
+from style import apply_style
+apply_style()
 st.title("🏆 区县排名分析")
 
 comps = get_competitions()

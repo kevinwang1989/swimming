@@ -14,6 +14,9 @@ st.set_page_config(
     layout="wide",
 )
 
+from style import apply_style
+apply_style()
+
 st.title("🏊 游泳成绩分析系统")
 st.markdown("---")
 

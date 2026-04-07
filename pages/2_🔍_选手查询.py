@@ -8,6 +8,9 @@ from queries.results import get_group_total_count
 from db.connection import get_db
 
 st.set_page_config(page_title="选手查询", layout="wide")
+
+from style import apply_style
+apply_style()
 st.title("🔍 选手查询")
 
 

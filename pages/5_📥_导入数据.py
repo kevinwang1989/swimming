@@ -7,6 +7,9 @@ from importer.import_service import import_pdf
 from queries.results import get_competitions
 
 st.set_page_config(page_title="导入数据", layout="wide")
+
+from style import apply_style
+apply_style()
 st.title("📥 导入比赛数据")
 
 # Show existing competitions
