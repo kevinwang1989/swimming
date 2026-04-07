@@ -222,9 +222,11 @@ for i in range(FREEZE_COLS):
 }}
 '''
 
-# Shadow on last frozen column
+# Right border + shadow on last frozen column to cover scroll gap
 html += f'''.rt .fz{FREEZE_COLS - 1} {{
-    box-shadow: 2px 0 4px rgba(0,0,0,0.08);
+    border-right: 2px solid #d0d0d0;
+    box-shadow: 3px 0 6px rgba(0,0,0,0.08);
+    clip-path: inset(0 -6px 0 0);
 }}
 '''
 
