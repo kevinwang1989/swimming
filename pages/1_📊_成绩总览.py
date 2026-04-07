@@ -134,6 +134,9 @@ def cell_style(val):
         return ' style="color: #999;"'
     return ''
 
+# Number of base columns to freeze (排名, 姓名, 所属区, 总分)
+FREEZE_COLS = 4
+
 html = '''<style>
 .results-table-wrap {
     overflow-x: auto;
@@ -143,10 +146,10 @@ html = '''<style>
     box-shadow: 0 1px 6px rgba(0,0,0,0.08);
 }
 .results-table {
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 0.85rem;
     white-space: nowrap;
-    width: 100%;
 }
 .results-table th, .results-table td {
     border: 1px solid #e0e0e0;
@@ -168,6 +171,19 @@ html = '''<style>
     top: 33px;
     z-index: 2;
 }
+/* Frozen columns */
+.results-table .frozen {
+    position: sticky;
+    background: #fff;
+    z-index: 1;
+}
+.results-table thead .frozen {
+    background: #f5f5fa;
+    z-index: 4;
+}
+.results-table tbody tr:hover .frozen {
+    background: #f0f4ff;
+}
 .results-table tbody tr:hover {
     background: #f0f4ff;
 }
@@ -175,12 +191,27 @@ html = '''<style>
     font-variant-numeric: tabular-nums;
 }
 </style>
-<div class="results-table-wrap"><table class="results-table"><thead>
-<tr>'''
+'''
+
+# Estimate column widths for left offsets (px)
+# 排名~50, 姓名~80, 所属区~80, 总分~55, 评级~50, 备注~50
+col_widths = {'排名': 50, '姓名': 80, '所属区': 80, '总分': 55, '性别': 50, '评级': 50, '备注': 50}
+freeze_lefts = []
+cumulative = 0
+for i, label in enumerate(base_col_labels):
+    if i < FREEZE_COLS:
+        freeze_lefts.append(cumulative)
+        w = col_widths.get(label, 60)
+        cumulative += w + 20  # width + padding
+
+html += '<div class="results-table-wrap"><table class="results-table"><thead>\n<tr>'
 
 # Header row 1: base columns with rowspan=2, event groups with colspan
-for label in base_col_labels:
-    html += f'<th rowspan="2">{label}</th>'
+for i, label in enumerate(base_col_labels):
+    if i < FREEZE_COLS:
+        html += f'<th rowspan="2" class="frozen" style="left:{freeze_lefts[i]}px;">{label}</th>'
+    else:
+        html += f'<th rowspan="2">{label}</th>'
 for ename, subs in event_groups.items():
     html += f'<th colspan="{len(subs)}">{ename}</th>'
 html += '</tr>\n<tr>'
@@ -193,19 +224,29 @@ html += '</tr></thead>\n<tbody>'
 
 # Build ordered column keys matching the header layout (use original df column names)
 event_col_set = {ec[0] for ec in event_cols}
-ordered_keys = [c for c in display_cols if c not in event_col_set]
+base_keys = [c for c in display_cols if c not in event_col_set]
+ordered_keys = list(base_keys)
 for orig, ename, sub in event_cols:
     ordered_keys.append(orig)
 
 # Render rows
 for _, row in display_df.iterrows():
     html += '<tr>'
-    for key in ordered_keys:
+    for col_idx, key in enumerate(ordered_keys):
         val = str(row.get(key, ''))
         if val == 'nan':
             val = ''
-        style = cell_style(val)
-        html += f'<td{style}>{val}</td>'
+        extra_style = cell_style(val)
+        if col_idx < FREEZE_COLS:
+            left = freeze_lefts[col_idx]
+            if extra_style:
+                # Merge frozen style with special style
+                inner = extra_style.replace(' style="', '').rstrip('"')
+                html += f'<td class="frozen" style="left:{left}px;{inner}">{val}</td>'
+            else:
+                html += f'<td class="frozen" style="left:{left}px;">{val}</td>'
+        else:
+            html += f'<td{extra_style}>{val}</td>'
     html += '</tr>\n'
 
 html += '</tbody></table></div>'
