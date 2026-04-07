@@ -85,9 +85,32 @@ def apply_style():
         border-radius: 8px;
     }
 
-    /* ---- Hide sidebar collapse button text glitch ---- */
-    [data-testid="stSidebarCollapsedControl"] {
-        display: none;
+    /* ---- Fix sidebar collapse button icon glitch ---- */
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"] {
+        visibility: hidden;
+        position: relative;
+    }
+    [data-testid="stSidebarCollapsedControl"]::after,
+    [data-testid="collapsedControl"]::after {
+        content: '☰';
+        visibility: visible;
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #555;
+    }
+    /* Hide the icon text inside sidebar collapse/expand buttons */
+    section[data-testid="stSidebar"] button[kind="header"] span,
+    [data-testid="stSidebarCollapseButton"] span {
+        font-size: 0 !important;
+    }
+    [data-testid="stSidebarCollapseButton"] span::after {
+        content: '«';
+        font-size: 1.4rem;
+        color: #555;
     }
 
     /* ---- Hide Streamlit branding ---- */
