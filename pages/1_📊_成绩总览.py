@@ -200,9 +200,12 @@ html += '''.rt-wrap {
     z-index: 3;
     font-weight: 600;
 }
+.rt thead tr:last-child th {
+    box-shadow: 0 1px 0 #e0e0e0;
+}
 '''
-html += f'.rt thead tr:nth-child(2) th {{ top: {HDR_H}px; z-index: 2; }}\n'
-html += f'.rt thead tr:nth-child(2) th.fz {{ z-index: 5; top: {HDR_H}px; }}\n'
+html += f'.rt thead tr:nth-child(2) th {{ top: {HDR_H - 1}px; z-index: 2; }}\n'
+html += f'.rt thead tr:nth-child(2) th.fz {{ z-index: 5; top: {HDR_H - 1}px; }}\n'
 
 # Frozen column CSS per column index
 for i in range(FREEZE_COLS):
