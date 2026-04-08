@@ -44,16 +44,55 @@ CREATE TABLE IF NOT EXISTS enrollment (
 );
 
 CREATE TABLE IF NOT EXISTS result (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    enrollment_id INTEGER NOT NULL REFERENCES enrollment(id),
-    event_id      INTEGER NOT NULL REFERENCES event(id),
-    raw_value     TEXT,
-    numeric_value REAL,
-    score         REAL,
-    status        TEXT CHECK(status IN ('normal', 'foul', 'withdrew', 'missing'))
-                  DEFAULT 'normal',
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    enrollment_id  INTEGER NOT NULL REFERENCES enrollment(id),
+    event_id       INTEGER NOT NULL REFERENCES event(id),
+    raw_value      TEXT,
+    numeric_value  REAL,
+    score          REAL,
+    status         TEXT CHECK(status IN ('normal', 'foul', 'withdrew', 'missing'))
+                   DEFAULT 'normal',
+    splits         TEXT,  -- JSON: [{"dist":50,"cum":24.33,"lap":24.33,"stroke":null}, ...]
+    reaction_time  REAL,  -- R.T. 反应时间 (seconds)
+    athlete_level  TEXT,  -- 运动等级: 一级/二级/三级/无等级
     UNIQUE(enrollment_id, event_id)
 );
+
+CREATE TABLE IF NOT EXISTS relay_team (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    competition_id  INTEGER NOT NULL REFERENCES competition(id),
+    group_id        INTEGER NOT NULL REFERENCES group_def(id),
+    event_id        INTEGER NOT NULL REFERENCES event(id),
+    rank            INTEGER,
+    heat            INTEGER,
+    lane            INTEGER,
+    district        TEXT NOT NULL,
+    final_time      TEXT,
+    final_seconds   REAL,
+    total_score     REAL,
+    athlete_level   TEXT,
+    status          TEXT CHECK(status IN ('normal', 'foul', 'withdrew', 'missing'))
+                    DEFAULT 'normal',
+    remark          TEXT,
+    UNIQUE(competition_id, group_id, event_id, district)
+);
+
+CREATE TABLE IF NOT EXISTS relay_leg (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    relay_team_id     INTEGER NOT NULL REFERENCES relay_team(id),
+    leg_order         INTEGER NOT NULL,
+    swimmer_name      TEXT NOT NULL,
+    reaction_time     REAL,
+    splits            TEXT,  -- JSON: per-50m splits within this leg
+    leg_time          TEXT,
+    leg_seconds       REAL,
+    cumulative_time   TEXT,
+    cumulative_seconds REAL,
+    UNIQUE(relay_team_id, leg_order)
+);
+
+CREATE INDEX IF NOT EXISTS idx_relay_team_event ON relay_team(competition_id, event_id);
+CREATE INDEX IF NOT EXISTS idx_relay_leg_team ON relay_leg(relay_team_id);
 
 CREATE INDEX IF NOT EXISTS idx_enrollment_competition ON enrollment(competition_id);
 CREATE INDEX IF NOT EXISTS idx_enrollment_participant ON enrollment(participant_id);

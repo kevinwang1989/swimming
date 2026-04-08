@@ -51,7 +51,7 @@ st.markdown("---")
 st.markdown("### 数据导入（管理员）")
 
 from db.init_db import init_database
-from importer.import_service import import_pdf
+from importer.import_service import import_pdf, import_final_pdf
 from queries.results import get_competitions
 
 comps = get_competitions()
@@ -85,6 +85,20 @@ with col2:
 with col3:
     comp_date = st.date_input("比赛日期")
 
+# Heuristic: filename containing "总决赛" or "final" defaults to finals format
+default_format_idx = 0
+if uploaded_file is not None:
+    fn = uploaded_file.name.lower()
+    if '总决赛' in uploaded_file.name or 'final' in fn:
+        default_format_idx = 1
+
+format_label = st.radio(
+    "PDF 格式",
+    options=['老格式（按组别）', '总决赛格式（按项目，含分段成绩 / 接力）'],
+    index=default_format_idx,
+    horizontal=True,
+)
+
 if uploaded_file and comp_name and short_name:
     if st.button("开始导入", type="primary"):
         with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
@@ -94,19 +108,23 @@ if uploaded_file and comp_name and short_name:
         try:
             with st.spinner("正在解析 PDF 并导入数据..."):
                 init_database()
-                stats = import_pdf(
-                    tmp_path,
-                    comp_name,
-                    short_name,
-                    str(comp_date)
-                )
-
-            st.success(f"""
-            导入成功！
-            - 组别数：{stats['groups']}
-            - 选手数：{stats['participants']}
-            - 成绩记录数：{stats['results']}
-            """)
+                if format_label.startswith('总决赛'):
+                    stats = import_final_pdf(tmp_path, comp_name, short_name, str(comp_date))
+                    st.success(f"""
+                    导入成功！
+                    - 项目数：{stats['events']}
+                    - 个人成绩记录：{stats['records']}
+                    - 接力队伍：{stats['relay_teams']}
+                    - 接力选手段次：{stats['relay_legs']}
+                    """)
+                else:
+                    stats = import_pdf(tmp_path, comp_name, short_name, str(comp_date))
+                    st.success(f"""
+                    导入成功！
+                    - 组别数：{stats['groups']}
+                    - 选手数：{stats['participants']}
+                    - 成绩记录数：{stats['results']}
+                    """)
             st.balloons()
 
         except Exception as e:

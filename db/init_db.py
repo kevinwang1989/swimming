@@ -47,6 +47,17 @@ EVENTS = [
 ]
 
 
+def _migrate_result_columns(conn):
+    """Idempotent migration: ensure result table has v1.1 columns."""
+    cols = {r['name'] for r in conn.execute("PRAGMA table_info(result)")}
+    if 'splits' not in cols:
+        conn.execute("ALTER TABLE result ADD COLUMN splits TEXT")
+    if 'reaction_time' not in cols:
+        conn.execute("ALTER TABLE result ADD COLUMN reaction_time REAL")
+    if 'athlete_level' not in cols:
+        conn.execute("ALTER TABLE result ADD COLUMN athlete_level TEXT")
+
+
 def init_database():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
@@ -54,6 +65,8 @@ def init_database():
     try:
         with open(SCHEMA_PATH, 'r') as f:
             conn.executescript(f.read())
+
+        _migrate_result_columns(conn)
 
         # Seed groups
         for gender, group_name, format_type in GROUPS:
