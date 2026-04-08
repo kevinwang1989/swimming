@@ -17,7 +17,7 @@ if comps.empty:
     st.stop()
 
 # Filters
-col1, col2, col3, col4 = st.columns([2, 1.5, 1, 2])
+col1, col2, col3, col4, col5 = st.columns([2, 1.5, 1, 2, 1.5])
 with col1:
     comp_options = {row['id']: row['name'] for _, row in comps.iterrows()}
     comp_id = st.selectbox("选择比赛", options=list(comp_options.keys()),
@@ -32,6 +32,10 @@ with col3:
 with col4:
     districts = ['全部'] + get_all_districts()
     district = st.selectbox("所属区", districts)
+
+with col5:
+    top_pct_options = {'全部': 100, '前10%': 10, '前20%': 20, '前30%': 30, '前50%': 50}
+    top_pct_label = st.selectbox("成绩筛选", options=list(top_pct_options.keys()))
 
 if not genders:
     st.info("请至少选择一个性别。")
@@ -63,10 +67,18 @@ if df.empty:
     st.info("该筛选条件下暂无数据。")
     st.stop()
 
+# Filter by top percentage (based on total_score ranking within the group)
+top_pct = top_pct_options[top_pct_label]
+total_count = len(df)
+if top_pct < 100:
+    cutoff = max(1, int(total_count * top_pct / 100))
+    df = df.head(cutoff)
+
 # Title
 gender_str = '/'.join([f'{g}子' for g in genders])
 district_str = f" — {district}" if district != '全部' else ""
-st.markdown(f"### {gender_str}{group}组{district_str} — 共 {len(df)} 人")
+pct_str = f" — {top_pct_label}" if top_pct < 100 else ""
+st.markdown(f"### {gender_str}{group}组{district_str}{pct_str} — 共 {len(df)} 人（总计 {total_count} 人）")
 
 events = all_events.sort_values('sort_order') if not all_events.empty else all_events
 
