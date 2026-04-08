@@ -13,6 +13,20 @@ def apply_style():
         font-family: 'Noto Sans SC', sans-serif;
     }
 
+    /* Restore Material Symbols font for icon spans (e.g. expander chevron),
+       which the broad rule above would otherwise replace and cause literal
+       'keyboard_arrow_right' text to leak through. */
+    span.material-symbols-rounded,
+    span.material-symbols-outlined,
+    span.material-icons,
+    span.material-icons-outlined,
+    [data-testid="stExpander"] [class*="material"],
+    [class*="material-symbols"],
+    [class*="material-icons"] {
+        font-family: 'Material Symbols Rounded', 'Material Symbols Outlined',
+                     'Material Icons', 'Material Icons Outlined' !important;
+    }
+
     /* ---- Header area ---- */
     .stMainBlockContainer {
         padding-top: 2rem;
