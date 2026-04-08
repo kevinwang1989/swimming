@@ -1,15 +1,20 @@
 """Query functions for comparison and cross-competition analysis."""
 
 import pandas as pd
+import streamlit as st
 from db.connection import get_db
 
 
+@st.cache_data(ttl=600)
 def compare_participants(participant_ids, competition_id=None):
     """Side-by-side comparison of multiple participants.
 
     Returns a DataFrame with events as rows, participant results as columns.
     """
     conn = get_db()
+    # Convert to tuple for cache hashability
+    if not isinstance(participant_ids, tuple):
+        participant_ids = tuple(participant_ids)
     placeholders = ','.join(['?'] * len(participant_ids))
 
     comp_filter = ""
@@ -38,6 +43,7 @@ def compare_participants(participant_ids, competition_id=None):
     return df
 
 
+@st.cache_data(ttl=600)
 def participant_progression(participant_id):
     """Track a participant's results across all competitions.
 
@@ -63,6 +69,7 @@ def participant_progression(participant_id):
     return df
 
 
+@st.cache_data(ttl=600)
 def get_event_ranking(competition_id, event_name, gender=None, group_name=None, limit=50):
     """Get ranking for a specific event in a competition."""
     conn = get_db()

@@ -1,9 +1,11 @@
 """Query functions for browsing competition results."""
 
 import pandas as pd
+import streamlit as st
 from db.connection import get_db
 
 
+@st.cache_data(ttl=600)
 def get_competitions():
     """Return all competitions."""
     conn = get_db()
@@ -12,6 +14,7 @@ def get_competitions():
     return df
 
 
+@st.cache_data(ttl=600)
 def get_groups():
     """Return all group definitions."""
     conn = get_db()
@@ -22,6 +25,7 @@ def get_groups():
     return df
 
 
+@st.cache_data(ttl=600)
 def get_group_results(competition_id, gender, group_name):
     """Get full results table for a group in a competition.
 
@@ -63,7 +67,7 @@ def get_group_results(competition_id, gender, group_name):
     if results.empty:
         return enrollments
 
-    # Pivot results into columns
+    # Pivot results into columns using vectorized approach
     for _, row in results.iterrows():
         eid = row['enrollment_id']
         event = row['event_name']
@@ -82,6 +86,7 @@ def get_group_results(competition_id, gender, group_name):
     return enrollments
 
 
+@st.cache_data(ttl=600)
 def get_events_for_group(competition_id, gender, group_name):
     """Get the list of events that have results for a given group."""
     conn = get_db()
@@ -99,6 +104,7 @@ def get_events_for_group(competition_id, gender, group_name):
     return df
 
 
+@st.cache_data(ttl=600)
 def search_participants(name_query='', district=None):
     """Search participants by name (fuzzy) and optional district."""
     conn = get_db()
@@ -118,6 +124,7 @@ def search_participants(name_query='', district=None):
     return df
 
 
+@st.cache_data(ttl=600)
 def get_participant_history(participant_id):
     """Get all competition results for a participant across all competitions."""
     conn = get_db()
@@ -139,6 +146,7 @@ def get_participant_history(participant_id):
     return df
 
 
+@st.cache_data(ttl=600)
 def get_group_total_count(competition_name, gender, group_name):
     """Get total number of participants in a group for a competition."""
     conn = get_db()
@@ -152,6 +160,7 @@ def get_group_total_count(competition_name, gender, group_name):
     return row[0] if row else 0
 
 
+@st.cache_data(ttl=600)
 def get_all_districts():
     """Return all distinct districts."""
     conn = get_db()

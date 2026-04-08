@@ -73,7 +73,7 @@ with tab1:
         )
 
         comp_filter = comp_id if comp_id != 0 else None
-        df = compare_participants(selected_ids, comp_filter)
+        df = compare_participants(tuple(selected_ids), comp_filter)
 
         if df.empty:
             st.info("所选选手没有共同的比赛数据。")

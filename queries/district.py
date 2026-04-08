@@ -1,9 +1,11 @@
 """Query functions for district-level analysis."""
 
 import pandas as pd
+import streamlit as st
 from db.connection import get_db
 
 
+@st.cache_data(ttl=600)
 def district_summary(competition_id, gender=None, group_name=None):
     """Aggregate statistics per district.
 
@@ -42,6 +44,7 @@ def district_summary(competition_id, gender=None, group_name=None):
     return df
 
 
+@st.cache_data(ttl=600)
 def district_event_comparison(competition_id, event_name, gender=None):
     """Compare districts on a specific event.
 
