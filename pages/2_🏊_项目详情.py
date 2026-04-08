@@ -10,6 +10,11 @@ from queries.results import (
     get_event_results,
     get_relay_results,
 )
+from queries.insights import (
+    analyze_district,
+    compare_districts,
+    compare_athletes,
+)
 
 st.set_page_config(page_title="项目详情", layout="wide")
 
@@ -164,6 +169,70 @@ if event_kind == 'individual':
                 cmp_rows.append(rec)
             cmp_df = pd.DataFrame(cmp_rows)
             st.dataframe(cmp_df, use_container_width=True, hide_index=True)
+
+        # ---- 🔬 深度分析 ----
+        st.markdown("---")
+        st.markdown("### 🔬 深度分析")
+        st.caption("自动生成的中文洞察，帮助快速定位优势/差距来源。")
+
+        # Use the *unfiltered* event data for analysis so 区/选手 维度可以独立选择，
+        # 不受顶部「代表队」筛选的影响。
+        full_df = get_event_results(comp_id, gender, group, event_name)
+        full_normal = full_df[full_df['status'] == 'normal']
+        districts_in_event = sorted(full_normal['district'].dropna().unique().tolist())
+
+        tab_d, tab_dd, tab_a = st.tabs(["单区分析", "双区对比", "选手对比"])
+
+        def _render_result(res):
+            for w in res.get('warnings') or []:
+                st.warning(w)
+            st.markdown(res['summary'])
+            for b in res.get('bullets') or []:
+                st.markdown(f"- {b}")
+            seg = res.get('segment_stats')
+            if seg is not None and not seg.empty:
+                with st.expander("查看分段数据明细"):
+                    st.dataframe(seg, hide_index=True, use_container_width=True)
+
+        with tab_d:
+            if not districts_in_event:
+                st.info("该项目暂无可分析的区。")
+            else:
+                default_idx = districts_in_event.index(district) if (
+                    district in districts_in_event) else 0
+                d_pick = st.selectbox(
+                    "选择代表队", options=districts_in_event,
+                    index=default_idx, key='insight_single_district',
+                )
+                _render_result(analyze_district(full_df, event_name, d_pick))
+
+        with tab_dd:
+            if len(districts_in_event) < 2:
+                st.info("该项目可对比的区不足 2 个。")
+            else:
+                cca, ccb = st.columns(2)
+                with cca:
+                    a_pick = st.selectbox(
+                        "区 A", options=districts_in_event,
+                        index=0, key='insight_dd_a',
+                    )
+                with ccb:
+                    b_pick = st.selectbox(
+                        "区 B", options=districts_in_event,
+                        index=1, key='insight_dd_b',
+                    )
+                if a_pick == b_pick:
+                    st.info("请选择两个不同的代表队。")
+                else:
+                    _render_result(
+                        compare_districts(full_df, event_name, a_pick, b_pick)
+                    )
+
+        with tab_a:
+            if not picked or len(picked) < 2:
+                st.info("请先在上方「分段对比」选择至少 2 名选手。")
+            else:
+                _render_result(compare_athletes(full_df, event_name, picked))
     else:
         st.caption("此项目没有分段数据（v1.0 数据或老格式）。")
 
