@@ -89,14 +89,14 @@ def _render_table(df: pd.DataFrame, kind: str):
 
     display = pd.DataFrame({
         '排名': range(1, len(df) + 1),
-        '选手': df['name'],
-        '区县': df['district'],
-        '组别': df['gender'] + df['group_name'],
-        '项目': df['event_name'],
-        '旧成绩': df['earlier_seconds'].apply(fmt_time),
-        '新成绩': df['later_seconds'].apply(fmt_time),
-        'Δ秒': df['delta_seconds'].apply(lambda x: f"{x:+.2f}"),
-        'Δ%': df['delta_pct'].apply(lambda x: f"{x:+.1f}%"),
+        '选手': df['name'].values,
+        '区县': df['district'].values,
+        '组别': df['group_label'].values,
+        '项目': df['event_name'].values,
+        '旧成绩': df['earlier_seconds'].apply(fmt_time).values,
+        '新成绩': df['later_seconds'].apply(fmt_time).values,
+        'Δ秒': df['delta_seconds'].apply(lambda x: f"{x:+.2f}").values,
+        'Δ%': df['delta_pct'].apply(lambda x: f"{x:+.1f}%").values,
     })
     st.dataframe(
         display,
@@ -106,7 +106,8 @@ def _render_table(df: pd.DataFrame, kind: str):
             '排名': st.column_config.NumberColumn(width="small"),
             '选手': st.column_config.TextColumn(width="small"),
             '区县': st.column_config.TextColumn(width="small"),
-            '组别': st.column_config.TextColumn(width="small"),
+            '组别': st.column_config.TextColumn(width="medium",
+                help="若跨年导致年龄组变动，会显示「旧组 → 新组」"),
             '项目': st.column_config.TextColumn(width="medium"),
         },
     )
@@ -136,9 +137,11 @@ with tab3:
 with st.expander("📖 计算口径"):
     st.markdown(
         """
-        - **数据来源**：同一选手在两场不同比赛中、参加**同一组别**的同一项目，
-          才会被纳入对比（避免跨年龄段误判）。
-        - **配对方式**：取该选手最早一场和最晚一场的同项目成绩。
+        - **数据来源**：同一选手在两场不同比赛中参加**同一项目**，即可纳入对比。
+        - **跨年升组**：C/D/E/F 是按年龄分组的窄年龄段，跨年后会整体平移
+          （例如 2025 年的女 C → 2026 年的女 B），此时"组别"列会显示
+          `女C → 女B`，表示该选手虽然分组标签变了，但还是同一个人的进步。
+        - **顶部"组别"筛选器**基于**旧比赛的组别**（即起点组别）。
         - **过滤条件**：仅纳入正常完赛（排除犯规、弃权、缺赛）；
           仅纳入计时类游泳项目（排除体能类项目）。
         - **Δ 秒**：负数代表进步（变快），正数代表退步（变慢）。
