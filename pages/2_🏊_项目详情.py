@@ -16,8 +16,6 @@ from queries.insights import (
     compare_athletes,
 )
 
-st.set_page_config(page_title="项目详情", layout="wide")
-
 from style import apply_style, page_header
 apply_style()
 page_header(

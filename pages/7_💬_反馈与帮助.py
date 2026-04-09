@@ -2,8 +2,6 @@ import streamlit as st
 import sys, os, tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-st.set_page_config(page_title="反馈与帮助", layout="wide")
-
 from style import apply_style, page_header
 apply_style()
 

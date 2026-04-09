@@ -8,8 +8,6 @@ from db.connection import get_db
 from queries.results import get_competitions, get_all_districts
 from queries.comparison import compare_participants, participant_progression
 
-st.set_page_config(page_title="对比分析", layout="wide")
-
 from style import apply_style, page_header
 apply_style()
 page_header(

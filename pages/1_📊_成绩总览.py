@@ -5,8 +5,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from queries.results import get_competitions, get_group_results, get_events_for_group, get_all_districts
 
-st.set_page_config(page_title="成绩总览", layout="wide")
-
 from style import apply_style, page_header
 apply_style()
 page_header(

@@ -6,6 +6,41 @@
 
 ---
 
+## [v1.6.2] — 2026-04-09
+
+**Commit**：待提交
+
+### 修改
+
+- **侧边栏图标统一换成 Material Symbols 矢量图标**（替代之前文件名里的 emoji），
+  跨平台渲染一致，告别 macOS 的 3D 彩色 emoji
+- 入口架构重构：
+  - 新建 `home.py` 承载首页内容（hero / KPI / 卡片网格）
+  - `app.py` 改为 router，使用 `st.navigation([st.Page(...), ...])`
+  - 每个 `st.Page` 显式指定 `icon=":material/xxx:"`
+- 8 个子页面统一去掉自身的 `st.set_page_config(...)`，避免与 router 冲突
+
+### 图标映射
+
+| 页面 | Material Symbol |
+|---|---|
+| 首页 | `home` |
+| 成绩总览 | `leaderboard` |
+| 项目详情 | `pool` |
+| 排兵布阵 | `groups` |
+| 选手查询 | `person_search` |
+| 对比分析 | `compare_arrows` |
+| 区县排名 | `workspace_premium` |
+| 进步榜 | `trending_up` |
+| 反馈与帮助 | `help` |
+
+### 注意事项
+
+- 仅改 `app.py` / 新建 `home.py` / 改各 `pages/*.py` 的开头几行；功能逻辑零改动
+- Streamlit ≥ 1.30 支持 `st.navigation` + `st.Page`，本机 1.50 OK
+
+---
+
 ## [v1.6.1] — 2026-04-09
 
 **Commit**：`f884c1a`
