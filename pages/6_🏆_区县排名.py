@@ -9,9 +9,13 @@ from queries.district import district_summary, district_event_comparison
 
 st.set_page_config(page_title="区县排名", layout="wide")
 
-from style import apply_style
+from style import apply_style, page_header
 apply_style()
-st.title("🏆 区县排名分析")
+page_header(
+    title="🏆 区县排名",
+    subtitle="各区分项目聚合排名与整体实力评估。",
+    kicker="06 · District Ranking",
+)
 
 comps = get_competitions()
 if comps.empty:

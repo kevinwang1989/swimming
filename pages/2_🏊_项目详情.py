@@ -18,10 +18,13 @@ from queries.insights import (
 
 st.set_page_config(page_title="项目详情", layout="wide")
 
-from style import apply_style
+from style import apply_style, page_header
 apply_style()
-st.title("🏊 项目详情")
-st.caption("按项目浏览成绩与分段数据（含接力）")
+page_header(
+    title="🏊 项目详情",
+    subtitle="按项目浏览成绩、分段数据与自动生成的深度分析洞察（含接力）。",
+    kicker="02 · Event Details",
+)
 
 # ---- Filters ----
 comps = get_competitions()

@@ -10,9 +10,13 @@ from queries.comparison import compare_participants, participant_progression
 
 st.set_page_config(page_title="对比分析", layout="wide")
 
-from style import apply_style
+from style import apply_style, page_header
 apply_style()
-st.title("📈 对比分析")
+page_header(
+    title="📈 对比分析",
+    subtitle="多选手同站 / 跨站对比，分段趋势一目了然。",
+    kicker="05 · Comparison",
+)
 
 
 @st.cache_data

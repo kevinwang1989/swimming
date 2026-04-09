@@ -4,10 +4,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(page_title="反馈与帮助", layout="wide")
 
-from style import apply_style
+from style import apply_style, page_header
 apply_style()
 
-st.title("💬 反馈与帮助")
+page_header(
+    title="💬 反馈与帮助",
+    subtitle="意见反馈、数据导入、查看完整版本更新记录。",
+    kicker="07 · Feedback & Help",
+)
 
 # ---- Feedback section ----
 st.markdown("### 意见反馈")

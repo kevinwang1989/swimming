@@ -128,6 +128,43 @@ def apply_style():
     }
 
     /* ---------------------------------------------------------------- */
+    /*  Compact page header (sub-pages)                                  */
+    /* ---------------------------------------------------------------- */
+    .wa-page-header {
+        position: relative;
+        border-radius: 6px;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--wa-navy) 0%, var(--wa-blue) 100%);
+        padding: 1.6rem 2rem 1.4rem;
+        margin-bottom: 2rem;
+        color: #ffffff;
+        box-shadow: 0 3px 14px rgba(0,58,93,0.12);
+        border-left: 4px solid #ffffff;
+    }
+    .wa-page-header-kicker {
+        font-family: 'Oswald', sans-serif;
+        font-size: 0.72rem;
+        letter-spacing: 0.2em;
+        opacity: 0.85;
+        text-transform: uppercase;
+    }
+    .wa-page-header-title {
+        font-family: 'Oswald', 'Noto Sans SC', sans-serif;
+        font-size: 1.85rem;
+        font-weight: 700;
+        line-height: 1.1;
+        text-transform: uppercase;
+        margin: 0.25rem 0 0.4rem;
+        color: #ffffff;
+    }
+    .wa-page-header-sub {
+        font-size: 0.88rem;
+        opacity: 0.92;
+        max-width: 720px;
+        line-height: 1.5;
+    }
+
+    /* ---------------------------------------------------------------- */
     /*  Stat card (Streamlit metric override)                            */
     /* ---------------------------------------------------------------- */
     [data-testid="stMetric"] {
@@ -316,3 +353,26 @@ def apply_style():
     footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
+
+
+def page_header(title: str, subtitle: str = "", kicker: str = ""):
+    """Render a compact WA-style hero banner at the top of a sub-page.
+
+    Drop-in replacement for the common ``st.title(...) + st.caption(...)``
+    pattern. Pass an English ``kicker`` (e.g. "EVENT DETAILS") for the
+    small uppercase line above the title; leave empty to omit.
+    """
+    import streamlit as st
+
+    kicker_html = f'<div class="wa-page-header-kicker">{kicker}</div>' if kicker else ""
+    sub_html = f'<div class="wa-page-header-sub">{subtitle}</div>' if subtitle else ""
+    st.markdown(
+        f"""
+        <div class="wa-page-header">
+            {kicker_html}
+            <div class="wa-page-header-title">{title}</div>
+            {sub_html}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )

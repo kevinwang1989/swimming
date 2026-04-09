@@ -18,10 +18,13 @@ from queries.lineup import fmt_time
 
 st.set_page_config(page_title="进步榜", layout="wide")
 
-from style import apply_style
+from style import apply_style, page_header
 apply_style()
-st.title("📈 跨站进步榜")
-st.caption("对比同一选手在不同比赛中的成绩变化，找出进步最大 / 退步最大的人和项目")
+page_header(
+    title="📈 跨站进步榜",
+    subtitle="对比同一选手在不同比赛中的成绩变化，找出进步最大 / 退步最大的人和项目。",
+    kicker="08 · Progress Leaderboard",
+)
 
 # ---- Load data ----
 raw_df = get_progress_data()

@@ -6,6 +6,38 @@
 
 ---
 
+## [v1.6.1] — 2026-04-09
+
+**Commit**：待定
+
+### 新增
+
+- **统一的子页面顶部 banner**：所有 8 个 page 现在使用同一个 `page_header()` helper，
+  显示紧凑版的 WA 风格深蓝渐变 banner（kicker 英文 + 中文大标题 + 副标题），
+  视觉风格与首页 hero 一致
+- 新增 CSS 类 `.wa-page-header` 在 `style.py`
+- 新增 `page_header(title, subtitle, kicker)` 辅助函数
+
+### 修改
+
+- `style.py` — 增加 `.wa-page-header` 样式 + `page_header()` 函数
+- `pages/1_📊_成绩总览.py` 至 `pages/8_📈_进步榜.py` — 全部 8 个页面把 `st.title()` + `st.caption()` 换成 `page_header(...)`
+
+### 视觉细节
+
+| 页面 | Kicker (Oswald 全大写英文) |
+|---|---|
+| 1 成绩总览 | 01 · Results Overview |
+| 2 项目详情 | 02 · Event Details |
+| 3 排兵布阵 | 03 · Relay Lineup |
+| 4 选手查询 | 04 · Athlete Profile |
+| 5 对比分析 | 05 · Comparison |
+| 6 区县排名 | 06 · District Ranking |
+| 7 反馈与帮助 | 07 · Feedback & Help |
+| 8 进步榜 | 08 · Progress Leaderboard |
+
+---
+
 ## [v1.6] — 2026-04-09
 
 **Commit**：`4e62c37`
