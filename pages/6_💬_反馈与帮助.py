@@ -134,3 +134,15 @@ if uploaded_file and comp_name and short_name:
 else:
     if uploaded_file:
         st.info("请填写比赛名称和简称后点击「开始导入」。")
+
+# ---- Version history ----
+st.markdown("---")
+st.markdown("### 📋 版本记录")
+changelog_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "CHANGELOG.md")
+if os.path.exists(changelog_path):
+    with open(changelog_path, "r", encoding="utf-8") as f:
+        changelog_text = f.read()
+    with st.expander("查看完整版本更新记录", expanded=False):
+        st.markdown(changelog_text)
+else:
+    st.caption("暂无版本记录文件。")
