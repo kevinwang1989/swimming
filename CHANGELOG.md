@@ -6,6 +6,41 @@
 
 ---
 
+## [v1.4] — 2026-04-09
+
+**Commit**：待定
+
+### 新增
+
+- **🎨 视觉风格升级**：参考 World Aquatics 官网（worldaquatics.com/swimming）的编辑风重设计
+  - **Hero banner**：首页顶部深蓝渐变 banner + 全大写英文大标题 + 中文副标题 + 核心数据 meta
+  - **Stat cards**：`st.metric` 从粉紫 pastel 改为白底 + 4px 蓝色 accent bar，数字用 Oswald display 字体
+  - **Editorial cards**（`.wa-card`）：首页「Recent Competitions」和「Explore the Data」section 换成卡片网格，hover 蓝边 + 微上浮
+  - **字体**：引入 **Oswald**（英文 display，用于 h1/h2/数字/按钮），中文继续 Noto Sans SC
+  - **品牌色统一**：WA 同款深蓝 `#0282c6` + 深海军蓝 `#003a5d`，通过 CSS 变量全局复用
+  - **Sidebar**：从灰蓝 pastel 改为深海军蓝 + 白字，模拟 WA 顶部 nav 风格
+  - **Tabs**：下划线式替换圆角 tab
+  - **DataFrame / Button / h1-h3** 统一收敛到 WA 配色和排版
+
+### 修改
+
+- `app.py` 首页完全重写：Hero + KPI row + Competition cards + 7 张 Quick-link cards
+- `.streamlit/config.toml` 主题色改为 `#0282c6`
+- `queries/results.py` 新增 `get_site_stats()` 返回首页 KPI 4 项 count
+
+### 约束
+
+- 本次仅改动 `app.py` / `style.py` / `.streamlit/config.toml` / `queries/results.py`（+1 函数）/ 新建 `assets/`
+- **完全不动** `pages/*`、`queries/lineup.py`、`queries/insights.py`、DB、importer
+- Oswald 仅用于标题 / 数字 / 按钮，中文正文绝不使用（Oswald 无 CJK 支持）
+- 高清游泳照片待用户提供后，在 `style.py` 打开一行注释即可叠加到 hero 背景
+
+### 注意事项
+
+- 纯代码改动 → Streamlit Cloud 自动部署，**无需 reboot**
+
+---
+
 ## [v1.3] — 2026-04-08
 
 **Commit**：`935d48c`

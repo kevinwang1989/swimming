@@ -309,3 +309,20 @@ def get_all_districts():
     ).fetchall()]
     conn.close()
     return districts
+
+
+@st.cache_data(ttl=600)
+def get_site_stats():
+    """Return homepage-level counts: competitions, participants, results, districts."""
+    conn = get_db()
+    cur = conn.cursor()
+    stats = {
+        'competitions': cur.execute("SELECT COUNT(*) FROM competition").fetchone()[0],
+        'participants': cur.execute("SELECT COUNT(*) FROM participant").fetchone()[0],
+        'results': cur.execute("SELECT COUNT(*) FROM result").fetchone()[0],
+        'districts': cur.execute(
+            "SELECT COUNT(DISTINCT district) FROM participant"
+        ).fetchone()[0],
+    }
+    conn.close()
+    return stats
