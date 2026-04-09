@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from queries.results import get_participant_history, get_all_districts
 from queries.results import get_group_total_count
+from queries.season_report import build_report, render_report_markdown
 from db.connection import get_db
 
 st.set_page_config(page_title="选手查询", layout="wide")
@@ -139,3 +140,15 @@ if len(competitions) > 1:
             )
             fig.update_yaxes(autorange='reversed')
             st.plotly_chart(fig, use_container_width=True)
+
+# ---- 赛季战报 ----
+st.markdown("---")
+with st.expander("✨ 生成赛季战报（自动总结 / 可截图分享）", expanded=False):
+    report = build_report(pid)
+    if report is None:
+        st.info("该选手暂无可生成战报的数据。")
+    else:
+        st.markdown(render_report_markdown(report, pname, pdistrict))
+        st.caption(
+            "未来开通 LLM API 后，这里可切换 AI 润色版叙述（已预留接口）。"
+        )
