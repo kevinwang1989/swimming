@@ -16,6 +16,8 @@ from queries.lineup import (
     fmt_time,
 )
 
+st.set_page_config(page_title="排兵布阵", layout="wide")
+
 from style import apply_style, page_header
 apply_style()
 

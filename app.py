@@ -1,3 +1,4 @@
+import streamlit as st
 import os
 import sys
 
@@ -6,8 +7,6 @@ sys.path.insert(0, os.path.dirname(__file__))
 from db.init_db import init_database
 
 init_database()
-
-import streamlit as st
 
 st.set_page_config(
     page_title="游泳成绩分析系统",
@@ -18,17 +17,117 @@ st.set_page_config(
 from style import apply_style
 apply_style()
 
-PAGES = [
-    st.Page("home.py", title="首页", icon=":material/home:", default=True),
-    st.Page("pages/1_📊_成绩总览.py", title="成绩总览", icon=":material/leaderboard:"),
-    st.Page("pages/2_🏊_项目详情.py", title="项目详情", icon=":material/pool:"),
-    st.Page("pages/3_🏅_排兵布阵.py", title="排兵布阵", icon=":material/groups:"),
-    st.Page("pages/4_🔍_选手查询.py", title="选手查询", icon=":material/person_search:"),
-    st.Page("pages/5_📈_对比分析.py", title="对比分析", icon=":material/compare_arrows:"),
-    st.Page("pages/6_🏆_区县排名.py", title="区县排名", icon=":material/workspace_premium:"),
-    st.Page("pages/8_📈_进步榜.py", title="进步榜", icon=":material/trending_up:"),
-    st.Page("pages/7_💬_反馈与帮助.py", title="反馈与帮助", icon=":material/help:"),
+from queries.results import get_competitions, get_site_stats
+
+# ----------------------------------------------------------------------
+# Hero banner
+# ----------------------------------------------------------------------
+stats = get_site_stats()
+comps = get_competitions()
+
+hero_meta = (
+    f"{stats['competitions']} COMPETITIONS &nbsp;·&nbsp; "
+    f"{stats['participants']} ATHLETES &nbsp;·&nbsp; "
+    f"{stats['results']} RESULTS &nbsp;·&nbsp; "
+    f"{stats['districts']} DISTRICTS"
+)
+
+st.markdown(
+    f"""
+    <div class="wa-hero">
+        <div class="wa-hero-kicker">Shanghai · Youth Swimming</div>
+        <h1 class="wa-hero-title">Shanghai Youth<br/>Swimming Analytics</h1>
+        <div class="wa-hero-sub">
+            2025-2026 赛季上海青少年游泳赛事数据分析平台 —— 成绩总览、分段洞察、
+            排兵布阵、跨站追踪，一站式决策辅助。
+        </div>
+        <div class="wa-hero-meta">{hero_meta}</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ----------------------------------------------------------------------
+# KPI row
+# ----------------------------------------------------------------------
+k1, k2, k3, k4 = st.columns(4)
+k1.metric("比赛场次", stats['competitions'])
+k2.metric("参赛选手", stats['participants'])
+k3.metric("成绩记录", stats['results'])
+k4.metric("代表队", stats['districts'])
+
+# ----------------------------------------------------------------------
+# Recent competitions
+# ----------------------------------------------------------------------
+st.markdown("## Recent Competitions")
+
+if comps.empty:
+    st.info("尚未导入任何比赛数据。请前往「反馈与帮助」页面上传 PDF。")
+else:
+    cols = st.columns(max(len(comps), 1))
+    for col, (_, comp) in zip(cols, comps.iterrows()):
+        date_str = comp['date'] if comp['date'] else '日期未知'
+        short = comp['short_name'] if 'short_name' in comp and comp['short_name'] else ''
+        col.markdown(
+            f"""
+            <div class="wa-card">
+                <div class="wa-card-kicker">Competition</div>
+                <h3>{comp['name']}</h3>
+                <p>{short}</p>
+                <div class="wa-card-meta">{date_str}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+# ----------------------------------------------------------------------
+# Explore the data — quick-link cards
+# ----------------------------------------------------------------------
+st.markdown("## Explore the Data")
+
+QUICK_LINKS = [
+    ("01", "成绩总览", "Results Overview",
+     "按比赛、组别浏览完整成绩表，支持区/性别/百分位筛选。"),
+    ("02", "项目详情", "Event Details",
+     "单项成绩 + 分段对比 + 自动生成中文深度分析洞察。"),
+    ("03", "排兵布阵", "Relay Lineup",
+     "为任意代表队自动推荐最强接力阵容，并对比实际派出方案。"),
+    ("04", "选手查询", "Athlete Profile",
+     "跨站追踪单个选手的成绩演进，查看个人档案。"),
+    ("05", "对比分析", "Comparison",
+     "多选手同站 / 跨站对比，分段趋势一目了然。"),
+    ("06", "区县排名", "District Ranking",
+     "各区分项目聚合排名，整体实力评估。"),
+    ("07", "反馈与帮助", "Feedback & Help",
+     "意见反馈、数据导入、查看版本更新记录。"),
 ]
 
-pg = st.navigation(PAGES)
-pg.run()
+# Render in 4-col grid (2 rows)
+for row_start in range(0, len(QUICK_LINKS), 4):
+    row_items = QUICK_LINKS[row_start:row_start + 4]
+    cols = st.columns(4)
+    for col, item in zip(cols, row_items):
+        num, cn, en, desc = item
+        col.markdown(
+            f"""
+            <div class="wa-card">
+                <div class="wa-card-kicker">{num} &nbsp;·&nbsp; {en}</div>
+                <h3>{cn}</h3>
+                <p>{desc}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    # Fill empty slots in the last row with blank spacers
+    for idx in range(len(row_items), 4):
+        cols[idx].markdown("&nbsp;", unsafe_allow_html=True)
+
+st.markdown(
+    """
+    <div style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e3e8ef;
+                color: #5b6b7d; font-size: 0.82rem; text-align: center;">
+        使用左侧菜单切换页面 &nbsp;·&nbsp; 数据截至最近一次导入
+    </div>
+    """,
+    unsafe_allow_html=True,
+)

@@ -7,6 +7,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from queries.results import get_competitions, get_events_for_group
 from queries.district import district_summary, district_event_comparison
 
+st.set_page_config(page_title="区县排名", layout="wide")
+
 from style import apply_style, page_header
 apply_style()
 page_header(

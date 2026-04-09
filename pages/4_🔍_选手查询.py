@@ -8,6 +8,8 @@ from queries.results import get_group_total_count
 from queries.season_report import build_report, render_report_markdown
 from db.connection import get_db
 
+st.set_page_config(page_title="选手查询", layout="wide")
+
 from style import apply_style, page_header
 apply_style()
 page_header(
