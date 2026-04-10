@@ -259,17 +259,33 @@ def apply_style():
     }
 
     /* ---- Rename the auto-generated "app" entry to "🏠 首页" ---- */
-    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] ul li:first-child a > span,
-    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] > li:first-child a > span,
-    section[data-testid="stSidebar"] ul[data-testid="stSidebarNav"] > li:first-child a > span {
-        font-size: 0 !important;
+    /* Strategy: make the original text transparent on the <a>, then overlay
+       the replacement label via an absolutely-positioned ::before. This is
+       robust against different Streamlit versions' DOM structures. */
+    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] ul li:first-child a,
+    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] > li:first-child a,
+    section[data-testid="stSidebar"] ul[data-testid="stSidebarNav"] > li:first-child a {
+        position: relative !important;
+        color: transparent !important;
     }
-    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] ul li:first-child a > span::after,
-    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] > li:first-child a > span::after,
-    section[data-testid="stSidebar"] ul[data-testid="stSidebarNav"] > li:first-child a > span::after {
+    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] ul li:first-child a *,
+    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] > li:first-child a *,
+    section[data-testid="stSidebar"] ul[data-testid="stSidebarNav"] > li:first-child a * {
+        color: transparent !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] ul li:first-child a::before,
+    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] > li:first-child a::before,
+    section[data-testid="stSidebar"] ul[data-testid="stSidebarNav"] > li:first-child a::before {
         content: "🏠  首页";
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #ffffff !important;
         font-size: 0.95rem;
         font-weight: 500;
+        white-space: nowrap;
+        pointer-events: none;
     }
 
     /* ---------------------------------------------------------------- */
