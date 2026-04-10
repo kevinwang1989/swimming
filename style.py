@@ -258,6 +258,20 @@ def apply_style():
         background: var(--wa-blue) !important;
     }
 
+    /* ---- Rename the auto-generated "app" entry to "🏠 首页" ---- */
+    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] ul li:first-child a > span,
+    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] > li:first-child a > span,
+    section[data-testid="stSidebar"] ul[data-testid="stSidebarNav"] > li:first-child a > span {
+        font-size: 0 !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] ul li:first-child a > span::after,
+    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] > li:first-child a > span::after,
+    section[data-testid="stSidebar"] ul[data-testid="stSidebarNav"] > li:first-child a > span::after {
+        content: "🏠  首页";
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
     /* ---------------------------------------------------------------- */
     /*  DataFrame — flatter                                              */
     /* ---------------------------------------------------------------- */
