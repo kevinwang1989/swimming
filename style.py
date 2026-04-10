@@ -206,6 +206,17 @@ def apply_style():
         box-shadow: 0 6px 20px rgba(2,130,198,0.12);
         transform: translateY(-2px);
     }
+    /* Anchor wrapper that makes the whole card clickable */
+    a.wa-card-link,
+    a.wa-card-link:hover,
+    a.wa-card-link:visited {
+        text-decoration: none !important;
+        color: inherit !important;
+        display: block;
+    }
+    a.wa-card-link .wa-card h3 {
+        color: var(--wa-navy) !important;
+    }
     .wa-card-kicker {
         font-family: 'Oswald', sans-serif;
         font-size: 0.7rem;

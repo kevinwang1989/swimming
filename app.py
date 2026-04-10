@@ -87,40 +87,43 @@ st.markdown("## Explore the Data")
 
 QUICK_LINKS = [
     ("01", "成绩总览", "Results Overview",
-     "按比赛、组别浏览完整成绩表，支持区/性别/百分位筛选。"),
+     "按比赛、组别浏览完整成绩表，支持区/性别/百分位筛选。", "成绩总览"),
     ("02", "项目详情", "Event Details",
-     "单项成绩 + 分段对比 + 自动生成中文深度分析洞察。"),
+     "单项成绩 + 分段对比 + 自动生成中文深度分析洞察。", "项目详情"),
     ("03", "排兵布阵", "Relay Lineup",
-     "为任意代表队自动推荐最强接力阵容，并对比实际派出方案。"),
+     "为任意代表队自动推荐最强接力阵容，并对比实际派出方案。", "排兵布阵"),
     ("04", "选手查询", "Athlete Profile",
-     "跨站追踪单个选手的成绩演进，查看个人档案。"),
+     "跨站追踪单个选手的成绩演进，查看个人档案。", "选手查询"),
     ("05", "对比分析", "Comparison",
-     "多选手同站 / 跨站对比，分段趋势一目了然。"),
+     "多选手同站 / 跨站对比，分段趋势一目了然。", "对比分析"),
     ("06", "区县排名", "District Ranking",
-     "各区分项目聚合排名，整体实力评估。"),
-    ("07", "反馈与帮助", "Feedback & Help",
-     "意见反馈、数据导入、查看版本更新记录。"),
+     "各区分项目聚合排名，整体实力评估。", "区县排名"),
+    ("07", "进步榜", "Progress Leaderboard",
+     "跨站对比同一选手的成绩变化，进步 / 退步一目了然。", "进步榜"),
+    ("08", "反馈与帮助", "Feedback & Help",
+     "意见反馈、数据导入、查看版本更新记录。", "反馈与帮助"),
 ]
 
-# Render in 4-col grid (2 rows)
+# Render in 4-col grid (2 rows of 4 cards each).
+# Wrap each card in an <a> tag pointing to the matching Streamlit page slug
+# so clicking anywhere on the card navigates to that page.
 for row_start in range(0, len(QUICK_LINKS), 4):
     row_items = QUICK_LINKS[row_start:row_start + 4]
     cols = st.columns(4)
     for col, item in zip(cols, row_items):
-        num, cn, en, desc = item
+        num, cn, en, desc, slug = item
         col.markdown(
             f"""
-            <div class="wa-card">
-                <div class="wa-card-kicker">{num} &nbsp;·&nbsp; {en}</div>
-                <h3>{cn}</h3>
-                <p>{desc}</p>
-            </div>
+            <a class="wa-card-link" href="/{slug}" target="_self">
+                <div class="wa-card">
+                    <div class="wa-card-kicker">{num} &nbsp;·&nbsp; {en}</div>
+                    <h3>{cn}</h3>
+                    <p>{desc}</p>
+                </div>
+            </a>
             """,
             unsafe_allow_html=True,
         )
-    # Fill empty slots in the last row with blank spacers
-    for idx in range(len(row_items), 4):
-        cols[idx].markdown("&nbsp;", unsafe_allow_html=True)
 
 st.markdown(
     """
