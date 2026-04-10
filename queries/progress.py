@@ -128,19 +128,21 @@ def summary_stats(df: pd.DataFrame) -> dict:
 
 
 def top_improvers(df: pd.DataFrame, top_n: int = 20, by: str = 'seconds') -> pd.DataFrame:
-    """Return the most-improved rows (most negative delta)."""
+    """Return the most-improved rows (strictly negative delta)."""
     if df.empty:
         return df
     sort_col = 'delta_seconds' if by == 'seconds' else 'delta_pct'
-    return df.sort_values(sort_col, ascending=True).head(top_n).reset_index(drop=True)
+    improved = df[df['delta_seconds'] < 0]
+    return improved.sort_values(sort_col, ascending=True).head(top_n).reset_index(drop=True)
 
 
 def top_regressors(df: pd.DataFrame, top_n: int = 20, by: str = 'seconds') -> pd.DataFrame:
-    """Return the most-regressed rows (most positive delta)."""
+    """Return the most-regressed rows (strictly positive delta)."""
     if df.empty:
         return df
     sort_col = 'delta_seconds' if by == 'seconds' else 'delta_pct'
-    return df.sort_values(sort_col, ascending=False).head(top_n).reset_index(drop=True)
+    regressed = df[df['delta_seconds'] > 0]
+    return regressed.sort_values(sort_col, ascending=False).head(top_n).reset_index(drop=True)
 
 
 def get_filter_options(df: pd.DataFrame) -> dict:
