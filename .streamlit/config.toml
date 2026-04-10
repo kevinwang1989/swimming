@@ -8,5 +8,14 @@ secondaryBackgroundColor = "#f5f7fa"
 textColor = "#1a1a2e"
 font = "sans serif"
 
+# Native sidebar theming (Streamlit 1.45+) — set navy background at the
+# config level so it's applied before any CSS injection, eliminating the
+# white→navy flash that used to happen on each page switch.
+[theme.sidebar]
+backgroundColor = "#003a5d"
+secondaryBackgroundColor = "#002b45"
+textColor = "#ffffff"
+primaryColor = "#0282c6"
+
 [browser]
 gatherUsageStats = false
