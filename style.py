@@ -27,17 +27,25 @@ def apply_style():
     }
 
     /* ---- CJK body text ---- */
-    html, body, [class*="st-"] {
+    /* Use html/body only — avoid broad [class*="st-"] selectors that
+       accidentally override Streamlit's internal icon font stacks. */
+    html, body {
         font-family: 'Noto Sans SC', sans-serif;
         color: var(--wa-text);
     }
 
-    /* Restore Material Symbols on icon spans (keep fix from v1.1). */
+    /* Restore Material Symbols on icon spans. Covers multiple DOM variants:
+       v1: span.material-symbols-rounded (legacy)
+       v2: data-testid="stIconMaterial" (Streamlit 1.35+)
+       v3: any [class*="material-symbols" / "material-icons"] */
     span.material-symbols-rounded,
     span.material-symbols-outlined,
     span.material-icons,
     span.material-icons-outlined,
+    [data-testid="stIconMaterial"],
+    [data-testid*="stIcon"],
     [data-testid="stExpander"] [class*="material"],
+    [data-testid="stExpander"] svg + span,
     [class*="material-symbols"],
     [class*="material-icons"] {
         font-family: 'Material Symbols Rounded', 'Material Symbols Outlined',
