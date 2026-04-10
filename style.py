@@ -270,33 +270,24 @@ def apply_style():
     }
 
     /* ---- Rename the auto-generated "app" entry to "🏠 首页" ---- */
-    /* Strategy: make the original text transparent on the <a>, then overlay
-       the replacement label via an absolutely-positioned ::before. This is
-       robust against different Streamlit versions' DOM structures. */
+    /* Strategy: set font-size: 0 on the <a> to collapse any original text
+       nodes / spans, then use ::before (which is a flex item in the <a>)
+       with its own explicit font-size so it participates in normal flow
+       and inherits the same padding/line-height as sibling nav items. */
     section[data-testid="stSidebar"] [data-testid="stSidebarNav"] ul li:first-child a,
     section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] > li:first-child a,
     section[data-testid="stSidebar"] ul[data-testid="stSidebarNav"] > li:first-child a {
-        position: relative !important;
-        color: transparent !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] ul li:first-child a *,
-    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] > li:first-child a *,
-    section[data-testid="stSidebar"] ul[data-testid="stSidebarNav"] > li:first-child a * {
-        color: transparent !important;
+        font-size: 0 !important;
     }
     section[data-testid="stSidebar"] [data-testid="stSidebarNav"] ul li:first-child a::before,
     section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] > li:first-child a::before,
     section[data-testid="stSidebar"] ul[data-testid="stSidebarNav"] > li:first-child a::before {
         content: "🏠  首页";
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
+        font-size: 0.875rem !important;
+        font-weight: 400 !important;
         color: #ffffff !important;
-        font-size: 0.95rem;
-        font-weight: 500;
+        line-height: 1.5;
         white-space: nowrap;
-        pointer-events: none;
     }
 
     /* ---------------------------------------------------------------- */
