@@ -191,6 +191,9 @@ def require_auth(page_name: str, min_role: str = "viewer"):
     authenticated, renders a login form and calls st.stop(). If authenticated
     but role is insufficient, shows a permission warning and calls st.stop().
     """
+    # ── 临时旁路：认证模块暂时下线，取消下方 return 即可恢复 ──
+    return
+
     user = _authenticate()
 
     if user is None:
