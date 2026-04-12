@@ -18,10 +18,8 @@ from queries.lineup import (
 
 st.set_page_config(page_title="排兵布阵", layout="wide")
 
-from style import apply_style, page_header
-apply_style()
-
-page_header(
+from style import init_page
+init_page(
     title="🏅 排兵布阵",
     subtitle="根据单项成绩，为代表队推荐最强接力阵容，并与实际派出阵容对比。",
     kicker="03 · Relay Lineup",

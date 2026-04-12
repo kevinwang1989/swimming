@@ -6,6 +6,45 @@
 
 ---
 
+## [v1.8] — 2026-04-10
+
+**Commit**：待提交
+
+### 新增
+
+- **邀请码认证系统**：全站访问需输入邀请码（如 `SWIM-A3K9`），未认证用户看到登录表单
+  - 新建 `auth/` 模块（models.py / guard.py / analytics.py）
+  - 邀请码格式 `SWIM-XXXX`，大小写不敏感，管理员在线生成
+  - Session token 存浏览器 Cookie（24 小时有效），不暴露在 URL 中
+  - 首次使用邀请码时填写昵称，后续直接输入码免填
+- **角色层级权限控制**：`viewer(1) < coach(2) < admin(3)`
+  - 每页通过 `init_page(..., min_role="admin")` 声明所需最低角色
+  - 权限不足时显示友好提示，非登录表单
+- **使用分析 Dashboard**（`pages/7_📊_使用分析.py`，仅 admin 可见）：
+  - 概览指标（总用户 / 7日活跃 / 今日&本周&累计 PV）
+  - 页面热度 bar chart + 近 30 天 PV 折线图
+  - 用户活跃表（总访问 / 最近在线 / 最常访问页面）
+  - 用户管理：在线生成邀请码 / 停用&启用用户
+- **`init_page()` 统一页面入口**：合并 `apply_style()` + `require_auth()` + `page_header()`
+  - 未来新增页面只需调一个函数，认证自动继承
+
+### 数据库
+
+- 新增 3 张表：`app_user`（用户 + 角色 + 邀请码）、`user_session`（token + 过期）、`analytics_event`（行为日志）
+- `init_database()` 自动 seed admin 用户（`ADMIN_CODE` 环境变量，默认 `SWIM-ADMIN`）
+
+### 修改
+
+- `db/schema.sql` — 追加 3 张表 + 索引
+- `db/init_db.py` — 新增 `_migrate_auth_tables` + admin seed
+- `style.py` — 新增 `init_page()` 函数
+- `app.py` — 加入 `require_auth("首页")`
+- 8 个 pages — `apply_style() + page_header()` 替换为 `init_page()`
+- `pages/9_💬_反馈与帮助.py` — 移除明文密码比对，改为角色判断
+- `requirements.txt` — 追加 `streamlit-cookies-controller>=0.0.4`
+
+---
+
 ## [v1.7] — 2026-04-09
 
 **Commit**：`335973c`

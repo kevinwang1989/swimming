@@ -7,9 +7,8 @@ from queries.results import get_competitions, get_group_results, get_events_for_
 
 st.set_page_config(page_title="成绩总览", layout="wide")
 
-from style import apply_style, page_header
-apply_style()
-page_header(
+from style import init_page
+init_page(
     title="📊 成绩总览",
     subtitle="按比赛、组别浏览完整成绩表，支持区县与百分位筛选。",
     kicker="01 · Results Overview",

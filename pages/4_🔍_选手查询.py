@@ -11,9 +11,8 @@ from db.connection import get_db
 
 st.set_page_config(page_title="选手查询", layout="wide")
 
-from style import apply_style, page_header
-apply_style()
-page_header(
+from style import init_page
+init_page(
     title="🔍 选手查询",
     subtitle="搜索任一选手，查看完整成绩档案、跨站趋势图与赛季战报。",
     kicker="04 · Athlete Profile",

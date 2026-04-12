@@ -101,3 +101,39 @@ CREATE INDEX IF NOT EXISTS idx_result_event ON result(event_id);
 CREATE INDEX IF NOT EXISTS idx_result_enrollment ON result(enrollment_id);
 CREATE INDEX IF NOT EXISTS idx_participant_district ON participant(district);
 CREATE INDEX IF NOT EXISTS idx_participant_name ON participant(name);
+
+-- ── Auth & Analytics (v1.8) ─────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS app_user (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    display_name  TEXT NOT NULL,
+    role          TEXT NOT NULL DEFAULT 'viewer'
+                  CHECK(role IN ('viewer', 'coach', 'admin')),
+    invite_code   TEXT NOT NULL UNIQUE,
+    is_active     INTEGER NOT NULL DEFAULT 1,
+    created_at    TEXT DEFAULT (datetime('now')),
+    last_login_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS user_session (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES app_user(id),
+    token      TEXT NOT NULL UNIQUE,
+    created_at TEXT DEFAULT (datetime('now')),
+    expires_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS analytics_event (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER REFERENCES app_user(id),
+    event_type TEXT NOT NULL,
+    page       TEXT,
+    detail     TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_token ON user_session(token);
+CREATE INDEX IF NOT EXISTS idx_session_user ON user_session(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_user ON analytics_event(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_time ON analytics_event(created_at);
+CREATE INDEX IF NOT EXISTS idx_analytics_page ON analytics_event(page);

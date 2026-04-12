@@ -58,6 +58,52 @@ def _migrate_result_columns(conn):
         conn.execute("ALTER TABLE result ADD COLUMN athlete_level TEXT")
 
 
+def _migrate_auth_tables(conn):
+    """Idempotent migration: create auth & analytics tables (v1.8)."""
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS app_user (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            display_name  TEXT NOT NULL,
+            role          TEXT NOT NULL DEFAULT 'viewer'
+                          CHECK(role IN ('viewer', 'coach', 'admin')),
+            invite_code   TEXT NOT NULL UNIQUE,
+            is_active     INTEGER NOT NULL DEFAULT 1,
+            created_at    TEXT DEFAULT (datetime('now')),
+            last_login_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS user_session (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER NOT NULL REFERENCES app_user(id),
+            token      TEXT NOT NULL UNIQUE,
+            created_at TEXT DEFAULT (datetime('now')),
+            expires_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS analytics_event (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER REFERENCES app_user(id),
+            event_type TEXT NOT NULL,
+            page       TEXT,
+            detail     TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_session_token ON user_session(token);
+        CREATE INDEX IF NOT EXISTS idx_session_user ON user_session(user_id);
+        CREATE INDEX IF NOT EXISTS idx_analytics_user ON analytics_event(user_id);
+        CREATE INDEX IF NOT EXISTS idx_analytics_time ON analytics_event(created_at);
+        CREATE INDEX IF NOT EXISTS idx_analytics_page ON analytics_event(page);
+    """)
+
+    # Seed admin user
+    admin_code = os.environ.get("ADMIN_CODE", "SWIM-ADMIN")
+    conn.execute(
+        "INSERT OR IGNORE INTO app_user (display_name, role, invite_code) VALUES (?, ?, ?)",
+        ("Admin", "admin", admin_code.upper()),
+    )
+
+
 def init_database():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
@@ -67,6 +113,7 @@ def init_database():
             conn.executescript(f.read())
 
         _migrate_result_columns(conn)
+        _migrate_auth_tables(conn)
 
         # Seed groups
         for gender, group_name, format_type in GROUPS:

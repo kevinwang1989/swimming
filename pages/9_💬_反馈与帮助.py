@@ -4,10 +4,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 st.set_page_config(page_title="反馈与帮助", layout="wide")
 
-from style import apply_style, page_header
-apply_style()
-
-page_header(
+from style import init_page
+init_page(
     title="💬 反馈与帮助",
     subtitle="意见反馈、数据导入、查看完整版本更新记录。",
     kicker="07 · Feedback & Help",
@@ -65,19 +63,12 @@ if not comps.empty:
         'name': '比赛名称', 'short_name': '简称', 'date': '日期'
     }), use_container_width=True, hide_index=True)
 
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "swim2026admin")
-
-password = st.text_input("请输入管理员密码", type="password", placeholder="输入密码解锁导入功能...")
-
-if not password:
-    st.info("导入功能需要管理员密码。")
+user = st.session_state.get("user", {})
+if user.get("role") != "admin":
+    st.info("数据导入功能仅管理员可用。如需导入数据，请使用管理员账号登录。")
     st.stop()
 
-if password != ADMIN_PASSWORD:
-    st.error("密码错误。")
-    st.stop()
-
-st.success("验证通过，可以导入数据。")
+st.success(f"管理员已登录（{user.get('display_name', '')}），可以导入数据。")
 
 uploaded_file = st.file_uploader("上传成绩册 PDF", type=['pdf'])
 

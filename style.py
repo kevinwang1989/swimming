@@ -416,3 +416,28 @@ def page_header(title: str, subtitle: str = "", kicker: str = ""):
         """,
         unsafe_allow_html=True,
     )
+
+
+# Characters that may prefix page titles (emoji + space)
+_EMOJI_STRIP = "🏊📊🏅🔍📈🏆💬🧬 "
+
+
+def init_page(title: str, subtitle: str = "", kicker: str = "",
+              min_role: str = "viewer"):
+    """Unified page initializer: style → auth → header.
+
+    Every page should call this ONE function instead of calling apply_style()
+    and page_header() separately. Authentication is baked in, so any new page
+    automatically inherits access control — impossible to forget.
+
+    Args:
+        title: Page title including emoji prefix (e.g. "📊 成绩总览").
+        subtitle: Short description under the title.
+        kicker: English kicker line (e.g. "01 · Results Overview").
+        min_role: Minimum role required ("viewer" / "coach" / "admin").
+    """
+    apply_style()
+    from auth import require_auth
+    page_name = title.lstrip(_EMOJI_STRIP)
+    require_auth(page_name, min_role=min_role)
+    page_header(title=title, subtitle=subtitle, kicker=kicker)

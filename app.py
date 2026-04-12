@@ -17,6 +17,9 @@ st.set_page_config(
 from style import apply_style
 apply_style()
 
+from auth import require_auth
+require_auth("首页")
+
 from queries.results import get_competitions, get_site_stats
 
 # ----------------------------------------------------------------------
