@@ -26,10 +26,14 @@ _COOKIE_MAX_AGE = 86400  # 24 hours in seconds
 
 
 def _get_cookie_controller() -> CookieController:
-    """Return a singleton CookieController (must be called once per page)."""
-    if "cookie_ctrl" not in st.session_state:
-        st.session_state["cookie_ctrl"] = CookieController()
-    return st.session_state["cookie_ctrl"]
+    """Return a fresh CookieController each page run.
+
+    The controller is a Streamlit component that must actually render in the
+    page to read cookies from the browser. Caching it in session_state would
+    prevent it from re-rendering on page refresh, causing cookie reads to
+    return None even when the cookie exists.
+    """
+    return CookieController()
 
 
 def _log_event(event_type: str, page: str = None, detail: str = None):
@@ -132,7 +136,7 @@ def _render_login_form():
                     pending["display_name"] = nickname.strip()
                     token = create_session(pending["id"])
                     ctrl = _get_cookie_controller()
-                    ctrl.set(_COOKIE_NAME, token, max_age=_COOKIE_MAX_AGE)
+                    ctrl.set(_COOKIE_NAME, token, max_age=_COOKIE_MAX_AGE, same_site="lax")
                     st.session_state["user"] = pending
                     st.session_state.pop("_pending_user", None)
                     _log_event("login", detail=f"user_id={pending['id']}")
@@ -164,7 +168,7 @@ def _render_login_form():
                         # Returning user — skip nickname
                         token = create_session(user["id"])
                         ctrl = _get_cookie_controller()
-                        ctrl.set(_COOKIE_NAME, token, max_age=_COOKIE_MAX_AGE)
+                        ctrl.set(_COOKIE_NAME, token, max_age=_COOKIE_MAX_AGE, same_site="lax")
                         st.session_state["user"] = user
                         _log_event("login", detail=f"user_id={user['id']}")
                         st.rerun()
