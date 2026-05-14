@@ -419,7 +419,7 @@ def page_header(title: str, subtitle: str = "", kicker: str = ""):
 
 
 # Characters that may prefix page titles (emoji + space)
-_EMOJI_STRIP = "🏊📊🏅🔍📈🏆💬🧬 "
+_EMOJI_STRIP = "🏊📊🏅🔍📈🏆💬🧬🔮 "
 
 
 def init_page(title: str, subtitle: str = "", kicker: str = "",
