@@ -66,13 +66,51 @@ def im_stroke_for_segment(seg_idx: int, n_segs: int) -> str:
     return IM_STROKE_ORDER[min(seg_idx // segs_per_stroke, 3)]
 
 
-def _extract_rows(page) -> list:
-    """Extract logical rows: list of (y, tokens). Drops mirrored negative-x content."""
-    words = [w for w in page.extract_words() if w['x0'] >= 0]
+def _detect_column_split(words, page_width: float) -> Optional[float]:
+    """Detect a 2-column layout where the right column overflows the mediabox.
+
+    The 2026 第二站 PDF renders two columns of results side-by-side, but the page
+    mediabox is only the width of one column. The right-column content lives at
+    x > page_width. We treat that as the signal for 2-column mode.
+
+    Returns the gutter x-coordinate (anything < split is left col) or None for
+    single-column pages.
+    """
+    if not words:
+        return None
+    max_x = max(w['x0'] for w in words)
+    # If all content fits within ~10% of mediabox, treat as single column.
+    if max_x < page_width * 1.1:
+        return None
+    # Find the biggest gap in the gutter region (right end of left col → start
+    # of right col). Restrict search to x near the page boundary.
+    xs = sorted({round(w['x0']) for w in words})
+    gutter_lo = page_width * 0.6
+    gutter_hi = page_width * 1.4
+    candidates = [
+        (xs[i + 1] - xs[i], xs[i], xs[i + 1])
+        for i in range(len(xs) - 1)
+        if gutter_lo <= xs[i] <= gutter_hi or gutter_lo <= xs[i + 1] <= gutter_hi
+    ]
+    if not candidates:
+        return None
+    biggest = max(candidates, key=lambda g: g[0])
+    gap, x_left, x_right = biggest
+    if gap < 60:
+        return None
+    split = (x_left + x_right) / 2
+    n_left = sum(1 for w in words if w['x0'] < split)
+    n_right = len(words) - n_left
+    if n_left < 0.2 * len(words) or n_right < 0.2 * len(words):
+        return None
+    return split
+
+
+def _group_rows_by_y(words) -> list:
+    """Group a flat word list into logical rows by Y coordinate."""
     by_y = defaultdict(list)
     for w in words:
         by_y[round(w['top'])].append(w)
-    # Merge near-equal y bins (±1)
     keys = sorted(by_y.keys())
     merged = []
     for yk in keys:
@@ -85,6 +123,25 @@ def _extract_rows(page) -> list:
         ws.sort(key=lambda w: w['x0'])
         rows.append((yk, [w['text'] for w in ws]))
     return rows
+
+
+def _extract_rows(page) -> list:
+    """Extract logical rows: list of (y, tokens).
+
+    Drops mirrored negative-x content (v1.1 artifact). Detects 2-column page
+    layouts (v1.8 — 2026 第二站 PDF) and yields rows from the LEFT column first,
+    then the RIGHT column, so that athletes from different events at the same Y
+    don't get merged into a single tokenized row.
+    """
+    words = [w for w in page.extract_words() if w['x0'] >= 0]
+    if not words:
+        return []
+    split_x = _detect_column_split(words, page.width)
+    if split_x is None:
+        return _group_rows_by_y(words)
+    left = [w for w in words if w['x0'] < split_x]
+    right = [w for w in words if w['x0'] >= split_x]
+    return _group_rows_by_y(left) + _group_rows_by_y(right)
 
 
 def _split_leading_nums(tokens):
@@ -225,20 +282,33 @@ def _all_time_tokens(tokens):
 
 
 def build_splits(rec, n_segs, event_name):
-    """Build splits JSON list from rec['cums'] and rec['laps']."""
+    """Build splits JSON list. Laps are derived from cum diffs (authoritative);
+    parsed lap tokens are only used to fill gaps when a cum is missing.
+    """
     is_im = '个人混合泳' in event_name
     splits = []
     cums = rec.get('cums') or []
     laps = rec.get('laps') or []
+    cums_s = [parse_time_to_seconds(c) for c in cums]
+    laps_s = [parse_time_to_seconds(l) for l in laps]
+    prev_cum = None
     for i in range(n_segs):
-        cum_s = parse_time_to_seconds(cums[i]) if i < len(cums) else None
-        lap_s = parse_time_to_seconds(laps[i]) if i < len(laps) else None
+        cum_s = cums_s[i] if i < len(cums_s) else None
+        # Lap from cum diff if possible, else fall back to parsed lap
+        if cum_s is not None and prev_cum is not None:
+            lap_s = round(cum_s - prev_cum, 2)
+        elif cum_s is not None and i == 0:
+            lap_s = cum_s
+        else:
+            lap_s = laps_s[i] if i < len(laps_s) else None
         splits.append({
             'dist': (i + 1) * 50,
             'cum': cum_s,
             'lap': lap_s,
             'stroke': im_stroke_for_segment(i, n_segs) if is_im else None,
         })
+        if cum_s is not None:
+            prev_cum = cum_s
     return splits
 
 
@@ -478,30 +548,28 @@ def parse_final_pdf(pdf_path: str) -> dict:
                                 flush_pending_team()
                     continue
 
-                # Multi-line continuation? Only when pending is collecting more data
+                # Multi-line continuation? Only when pending is collecting more data.
+                #
+                # Two PDF formats coexist:
+                #   - 2025 总决赛: cum rows (M:SS.SS) and lap rows (SS.SS) interleave
+                #   - 2026 第二站:  only cum rows; no separate lap rows
+                #
+                # Format-agnostic strategy: classify each continuation row by token
+                # shape — MM:SS.SS tokens are cum continuations, SS.SS-only rows are
+                # lap rows (which we collect for backward compat but build_splits
+                # will recompute laps from cum diffs anyway).
                 if pending is not None and pending_state is not None and _all_time_tokens(tokens):
-                    if pending_state == 'first_lap':
-                        # Expect 3 lap tokens (laps 2..min(4, n_segs))
-                        for t in tokens:
-                            pending['laps'].append(t)
-                        if n_segs <= 4:
-                            flush_pending()
-                        else:
-                            pending_state = 'cum_group'
-                        continue
-                    if pending_state == 'cum_group':
+                    has_colon = any(':' in t for t in tokens)
+                    if has_colon:
                         for t in tokens:
                             pending['cums'].append(t)
-                        pending_state = 'lap_group'
-                        continue
-                    if pending_state == 'lap_group':
+                    else:
                         for t in tokens:
                             pending['laps'].append(t)
-                        if len(pending['cums']) >= n_segs:
-                            flush_pending()
-                        else:
-                            pending_state = 'cum_group'
-                        continue
+                    # Flush once we have all cums collected
+                    if len(pending['cums']) >= n_segs:
+                        flush_pending()
+                    continue
 
                 # Status row (DSQ / DNS / etc.)
                 if tokens[-1] in NON_NORMAL_REMARKS:
